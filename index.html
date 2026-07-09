@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0369a1">
+<link rel="manifest" href="./manifest.json">
+<link rel="icon" href="./icon-192.png">
+<link rel="apple-touch-icon" href="./icon-192.png">
+<title>VentiloTech</title>
+<style>
+:root{--bg:#f1f5f9;--card:#fff;--ink:#0f172a;--muted:#64748b;--line:#e2e8f0;--primary:#0369a1;--primary-soft:#e0f2fe;--danger:#dc2626;--danger-soft:#fee2e2;--ok:#059669;--ok-soft:#d1fae5;--warn:#d97706;--warn-soft:#fef3c7;--radius:12px;--shadow:0 1px 3px rgba(15,23,42,.08),0 4px 12px rgba(15,23,42,.05)}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--ink);font-size:15px}
+button{font-family:inherit;cursor:pointer}
+input,select,textarea{font-family:inherit;font-size:16px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;width:100%;background:#fff;color:var(--ink)}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--primary-soft);border-color:var(--primary)}
+label{font-size:12.5px;font-weight:600;color:var(--muted);display:block;margin-bottom:4px}
+.topbar{background:var(--primary);color:#fff;padding:12px 16px;padding-top:calc(12px + env(safe-area-inset-top));display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:50}
+.topbar .logo{font-size:17px;font-weight:800;flex:1}
+.topbar button{background:rgba(255,255,255,.15);border:none;color:#fff;border-radius:99px;padding:7px 12px;font-size:13px;font-weight:600}
+main{max-width:640px;margin:0 auto;padding:14px 14px 90px}
+.btn{border:none;border-radius:10px;padding:11px 16px;font-size:14.5px;font-weight:600}
+.btn-primary{background:var(--primary);color:#fff}
+.btn-ghost{background:#fff;border:1px solid var(--line);color:var(--ink)}
+.btn-ok{background:var(--ok);color:#fff}
+.btn-danger{background:var(--danger-soft);color:var(--danger)}
+.card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px;margin-bottom:14px}
+.card h2{font-size:15.5px;margin-bottom:10px}
+.grid-stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.stat{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:12px 14px}
+.stat .num{font-size:26px;font-weight:800}
+.stat .lbl{font-size:12px;color:var(--muted);font-weight:600}
+.stat.late .num{color:var(--danger)}.stat.today .num{color:var(--primary)}.stat.prog .num{color:var(--warn)}.stat.done .num{color:var(--ok)}
+.act{display:flex;gap:10px;align-items:flex-start;padding:12px;border:1px solid var(--line);border-radius:10px;margin-bottom:8px;background:#fff;cursor:pointer}
+.act .tipo-bar{width:5px;align-self:stretch;border-radius:4px;flex-shrink:0}
+.act .body{flex:1;min-width:0}
+.act .t1{font-weight:700;font-size:14px}
+.act .t2{font-size:12.5px;color:var(--muted);margin-top:2px}
+.act.done{opacity:.6}
+.badge{display:inline-block;font-size:11px;font-weight:700;padding:2px 9px;border-radius:99px;white-space:nowrap}
+.b-prog{background:var(--primary-soft);color:var(--primary)}.b-corso{background:var(--warn-soft);color:var(--warn)}.b-done{background:var(--ok-soft);color:var(--ok)}.b-ann{background:#f1f5f9;color:var(--muted);text-decoration:line-through}.b-late{background:var(--danger-soft);color:var(--danger)}.b-urg{background:var(--danger);color:#fff}
+.day-head{font-size:12.5px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin:16px 0 8px}
+.day-head.today{color:var(--primary)}.day-head.late{color:var(--danger)}
+.filters{display:flex;flex-direction:column;gap:8px;margin-bottom:12px}
+.filters .row2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.pat-card{display:flex;align-items:center;gap:10px;padding:12px;border:1px solid var(--line);border-radius:10px;margin-bottom:8px;background:#fff;cursor:pointer}
+.pat-card .info{flex:1;min-width:0}
+.pat-card .nome{font-weight:700}
+.pat-card .sub{font-size:12.5px;color:var(--muted)}
+.overlay{position:fixed;inset:0;background:rgba(15,23,42,.5);display:none;align-items:flex-end;justify-content:center;z-index:100}
+.overlay.open{display:flex}
+.modal{background:#fff;border-radius:18px 18px 0 0;width:100%;max-width:640px;padding:20px;padding-bottom:calc(20px + env(safe-area-inset-bottom));max-height:88vh;overflow-y:auto}
+@media(min-width:700px){.overlay{align-items:center;padding:20px}.modal{border-radius:16px}}
+.modal h3{font-size:16.5px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center}
+.modal h3 .x{background:none;border:none;font-size:22px;color:var(--muted);line-height:1}
+.frow{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+.frow.full{grid-template-columns:1fr}
+.modal .actions{display:flex;gap:8px;justify-content:flex-end;margin-top:14px;flex-wrap:wrap}
+.kv{display:grid;grid-template-columns:130px 1fr;gap:6px 10px;font-size:14px;margin-bottom:10px}
+.kv .k{color:var(--muted);font-weight:600;font-size:12.5px}
+.esito-box{background:var(--ok-soft);border-radius:10px;padding:12px;margin-top:8px}
+.hint{font-size:12.5px;color:var(--muted);margin-top:4px}
+.empty{text-align:center;color:var(--muted);padding:26px 10px;font-size:14px}
+.bottomnav{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--line);display:flex;z-index:60;padding-bottom:env(safe-area-inset-bottom)}
+.bottomnav button{flex:1;background:none;border:none;padding:9px 4px 7px;font-size:10.5px;font-weight:600;color:var(--muted);display:flex;flex-direction:column;align-items:center;gap:2px}
+.bottomnav button .ico{font-size:20px}
+.bottomnav button.active{color:var(--primary)}
+.fab{position:fixed;right:16px;bottom:calc(74px + env(safe-area-inset-bottom));width:56px;height:56px;border-radius:50%;background:var(--primary);color:#fff;border:none;font-size:28px;box-shadow:0 6px 16px rgba(3,105,161,.4);z-index:60}
+#toast{position:fixed;top:calc(64px + env(safe-area-inset-top));left:50%;transform:translateX(-50%);background:#0f172a;color:#fff;padding:10px 18px;border-radius:99px;font-size:13.5px;font-weight:600;z-index:200;display:none;max-width:90%;box-shadow:0 8px 24px rgba(0,0,0,.3)}
+#loginBox{max-width:380px;margin:8vh auto;padding:0 16px}
+#loginBox .card{padding:24px}
+#loginBox h1{font-size:22px;color:var(--primary);margin-bottom:4px;text-align:center}
+#loginBox .sub{text-align:center;color:var(--muted);font-size:13px;margin-bottom:18px}
+.photo-grid{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.photo-grid img{width:74px;height:74px;object-fit:cover;border-radius:10px;border:1px solid var(--line);cursor:pointer}
+.photo-add{margin-top:8px}
+.err{color:var(--danger);font-size:13px;margin-top:8px;font-weight:600}
+</style>
+</head>
+<body>
+
+<div id="loginBox">
+  <div class="card">
+    <h1>&#129515; VentiloTech</h1>
+    <div class="sub">Gestione ventiloterapia domiciliare</div>
+    <form id="loginForm">
+      <div class="frow full"><div><label>Email</label><input type="email" name="email" required autocomplete="username" placeholder="nome@ventilotech.app"></div></div>
+      <div class="frow full"><div><label>Password</label><input type="password" name="password" required autocomplete="current-password"></div></div>
+      <button type="submit" class="btn btn-primary" style="width:100%">Accedi</button>
+      <div id="loginErr" class="err" style="display:none"></div>
+    </form>
+  </div>
+</div>
+
+<div id="appBox" style="display:none">
+  <div class="topbar">
+    <div class="logo">&#129515; VentiloTech</div>
+    <button data-action="bell" id="bellBtn" title="Notifiche">&#128276;</button>
+    <button data-action="logout" id="userBtn"></button>
+  </div>
+  <main id="main"></main>
+  <button class="fab" data-action="new-act" id="fabBtn" style="display:none">+</button>
+  <div class="bottomnav" id="bottomnav">
+    <button data-action="nav-oggi"><span class="ico">&#127968;</span>Oggi</button>
+    <button data-action="nav-agenda"><span class="ico">&#128197;</span>Agenda</button>
+    <button data-action="nav-storico"><span class="ico">&#128203;</span>Storico</button>
+    <button data-action="nav-pazienti"><span class="ico">&#128101;</span>Pazienti</button>
+  </div>
+</div>
+
+<div class="overlay" id="overlay"><div class="modal" id="modalBox"></div></div>
+<div id="toast"></div>
+
+<script type="module">
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+
+const SB_URL = 'https://fhbreihnswawelcwntfn.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZoYnJlaWhuc3dhd2VsY3dudGZuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA5MjUzNTcsImV4cCI6MjA5NjUwMTM1N30.ew5V7ptShfVFVzCVOp5t4w5N-wXqNcWMoxFhdfdV30s';
+const APP_BASE = './';
+const sb = createClient(SB_URL, SB_KEY);
+
+const TIPI = {
+  monitoraggio: { label: 'Monitoraggio cardio-respiratorio', color: '#8b5cf6' },
+  titolazione: { label: 'Titolazione', color: '#0ea5e9' },
+  saturimetria: { label: 'Saturimetria notturna', color: '#10b981' },
+  controllo_ventilatore: { label: 'Controllo ventilatore', color: '#f59e0b' },
+  consegna_ritiro: { label: 'Consegna / ritiro materiale', color: '#64748b' },
+  altro: { label: 'Altro intervento', color: '#94a3b8' }
+};
+const FASI = { unica: 'Intervento unico', consegna: 'Consegna strumento', ritiro: 'Ritiro e scarico dati' };
+const FASCE = { qualsiasi: 'Qualsiasi orario', mattina: 'Mattina', pomeriggio: 'Pomeriggio', sera: 'Sera' };
+const STATI = {
+  programmata: { label: 'Programmata', cls: 'b-prog' },
+  in_corso: { label: 'In corso', cls: 'b-corso' },
+  completata: { label: 'Completata', cls: 'b-done' },
+  annullata: { label: 'Annullata', cls: 'b-ann' }
+};
+const ESITO_FIELDS = {
+  saturimetria: [['spo2_media','SpO2 media (%)','number'],['spo2_min','SpO2 minima (%)','number'],['t90','T90 - tempo SpO2 sotto 90% (%)','number'],['odi','ODI (eventi/ora)','number']],
+  monitoraggio: [['ahi','AHI (eventi/ora)','number'],['odi','ODI (eventi/ora)','number'],['spo2_media','SpO2 media (%)','number'],['spo2_min','SpO2 minima (%)','number'],['t90','T90 (%)','number']],
+  titolazione: [['dispositivo','Dispositivo','text'],['modalita','Modalita (CPAP/APAP/BiLevel/NIV)','text'],['pressioni','Pressioni impostate','text'],['ahi_residuo','AHI residuo','number'],['perdite','Perdite (L/min)','number']],
+  controllo_ventilatore: [['dispositivo','Dispositivo','text'],['ore_utilizzo','Ore di utilizzo (contatore)','number'],['parametri','Parametri verificati / modifiche','text']]
+};
+const MESI = ['Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno','Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'];
+
+let me = null;
+let patients = [];
+let activities = [];
+let currentView = 'oggi';
+let filtri = { stato: 'attive', tipo: '', q: '' };
+let storicoQ = '';
+let pendingPhotos = [];
+let refreshTimer = null;
+
+function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){ return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]; }); }
+function NL() { return String.fromCharCode(10); }
+function todayStr(offset) { const d = new Date(); if (offset) d.setDate(d.getDate() + offset); return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0'); }
+function patient(id) { return patients.find(function(p){ return p.id === id; }); }
+function patientName(id) { const p = patient(id); return p ? (p.cognome + ' ' + p.nome) : '(paziente eliminato)'; }
+function isLate(a) { return (a.stato === 'programmata' || a.stato === 'in_corso') && a.data < todayStr(); }
+function canPlan() { return me && me.role === 'coord'; }
+function fmtDate(ds) {
+  if (!ds) return '-';
+  if (ds === todayStr()) return 'Oggi';
+  if (ds === todayStr(1)) return 'Domani';
+  if (ds === todayStr(-1)) return 'Ieri';
+  const parts = ds.split('-');
+  return new Date(Number(parts[0]), Number(parts[1])-1, Number(parts[2])).toLocaleDateString('it-IT', { weekday:'short', day:'numeric', month:'short', year:'numeric' });
+}
+function fmtDateTime(iso) { if (!iso) return '-'; return new Date(iso).toLocaleString('it-IT', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' }); }
+function statoBadge(a) {
+  if (isLate(a)) return '<span class="badge b-late">In ritardo</span>';
+  const s = STATI[a.stato];
+  return '<span class="badge ' + s.cls + '">' + s.label + '</span>';
+}
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.display = 'block';
+  clearTimeout(t._h);
+  t._h = setTimeout(function(){ t.style.display = 'none'; }, 3500);
+}
+
+/* ---------- card attivita ---------- */
+function actCard(a) {
+  const t = TIPI[a.tipo] || TIPI.altro;
+  const faseTxt = a.fase && a.fase !== 'unica' ? ' &middot; ' + FASI[a.fase] : '';
+  const fasciaTxt = a.fascia && a.fascia !== 'qualsiasi' ? ' &middot; ' + FASCE[a.fascia] : '';
+  const foto = a.photos && a.photos.length ? ' &middot; &#128247;' + a.photos.length : '';
+  return '<div class="act' + (a.stato === 'completata' || a.stato === 'annullata' ? ' done' : '') + '" data-act="' + a.id + '">' +
+    '<div class="tipo-bar" style="background:' + t.color + '"></div>' +
+    '<div class="body">' +
+      '<div class="t1">' + esc(t.label) + faseTxt + '</div>' +
+      '<div class="t2">&#128100; ' + esc(patientName(a.patient_id)) + ' &middot; &#128197; ' + fmtDate(a.data) + fasciaTxt + foto + '</div>' +
+      (a.note ? '<div class="t2">&#128221; ' + esc(a.note) + '</div>' : '') +
+    '</div>' +
+    '<div style="text-align:right;display:flex;flex-direction:column;gap:4px;align-items:flex-end">' +
+      statoBadge(a) +
+      (a.priorita === 'urgente' ? '<span class="badge b-urg">URGENTE</span>' : '') +
+    '</div></div>';
+}
+
+/* ---------- viste ---------- */
+function viewOggi() {
+  const attive = function(a){ return a.stato === 'programmata' || a.stato === 'in_corso'; };
+  const oggi = activities.filter(function(a){ return a.data === todayStr() && attive(a); });
+  const ritardo = activities.filter(isLate);
+  const inCorso = activities.filter(function(a){ return a.stato === 'in_corso'; });
+  const lim = new Date(); lim.setDate(lim.getDate() - 30);
+  const done30 = activities.filter(function(a){ return a.stato === 'completata' && a.completed_at && new Date(a.completed_at) >= lim; });
+  const prossime = activities.filter(function(a){ return attive(a) && a.data > todayStr() && a.data <= todayStr(7); }).sort(function(x,y){ return x.data.localeCompare(y.data); });
+  let h = '<div class="grid-stats">' +
+    '<div class="stat today"><div class="num">' + oggi.length + '</div><div class="lbl">Da fare oggi</div></div>' +
+    '<div class="stat late"><div class="num">' + ritardo.length + '</div><div class="lbl">In ritardo</div></div>' +
+    '<div class="stat prog"><div class="num">' + inCorso.length + '</div><div class="lbl">In corso</div></div>' +
+    '<div class="stat done"><div class="num">' + done30.length + '</div><div class="lbl">Completate (30 gg)</div></div></div>';
+  if (ritardo.length) h += '<div class="card"><h2 style="color:var(--danger)">&#9888; In ritardo</h2>' + ritardo.sort(function(x,y){ return x.data.localeCompare(y.data); }).map(actCard).join('') + '</div>';
+  h += '<div class="card"><h2>Oggi</h2>' + (oggi.length ? oggi.map(actCard).join('') : '<div class="empty">Nessuna attivit&agrave; per oggi.</div>') + '</div>';
+  h += '<div class="card"><h2>Prossimi 7 giorni</h2>' + (prossime.length ? prossime.map(actCard).join('') : '<div class="empty">Nessuna attivit&agrave; programmata.</div>') + '</div>';
+  return h;
+}
+
+function viewAgenda() {
+  let acts = activities.slice();
+  if (filtri.stato === 'attive') acts = acts.filter(function(a){ return a.stato === 'programmata' || a.stato === 'in_corso'; });
+  else if (filtri.stato) acts = acts.filter(function(a){ return a.stato === filtri.stato; });
+  if (filtri.tipo) acts = acts.filter(function(a){ return a.tipo === filtri.tipo; });
+  if (filtri.q) { const q = filtri.q.toLowerCase(); acts = acts.filter(function(a){ return patientName(a.patient_id).toLowerCase().indexOf(q) !== -1 || (a.note||'').toLowerCase().indexOf(q) !== -1; }); }
+  acts.sort(function(x,y){ return x.data.localeCompare(y.data) || (x.priorita === 'urgente' ? -1 : 1); });
+  let h = '<div class="card"><div class="filters">' +
+    '<div class="row2">' +
+    '<div><label>Stato</label><select data-filter="stato">' +
+      '<option value="attive"' + (filtri.stato === 'attive' ? ' selected' : '') + '>Attive</option>' +
+      '<option value=""' + (filtri.stato === '' ? ' selected' : '') + '>Tutte</option>' +
+      Object.keys(STATI).map(function(s){ return '<option value="' + s + '"' + (filtri.stato === s ? ' selected' : '') + '>' + STATI[s].label + '</option>'; }).join('') +
+    '</select></div>' +
+    '<div><label>Tipo</label><select data-filter="tipo"><option value="">Tutti</option>' +
+      Object.keys(TIPI).map(function(t){ return '<option value="' + t + '"' + (filtri.tipo === t ? ' selected' : '') + '>' + TIPI[t].label + '</option>'; }).join('') +
+    '</select></div></div>' +
+    '<div><label>Cerca</label><input data-filter="q" value="' + esc(filtri.q) + '" placeholder="Paziente o note..."></div>' +
+  '</div>';
+  if (!acts.length) { h += '<div class="empty">Nessuna attivit&agrave; trovata.</div></div>'; return h; }
+  let last = null;
+  acts.forEach(function(a){
+    if (a.data !== last) { last = a.data; const cls = a.data === todayStr() ? ' today' : (a.data < todayStr() ? ' late' : ''); h += '<div class="day-head' + cls + '">' + fmtDate(a.data) + '</div>'; }
+    h += actCard(a);
+  });
+  h += '</div>';
+  return h;
+}
+
+function viewStorico() {
+  let acts = activities.filter(function(a){ return a.stato === 'completata' || a.stato === 'annullata'; });
+  if (storicoQ) { const q = storicoQ.toLowerCase(); acts = acts.filter(function(a){ return patientName(a.patient_id).toLowerCase().indexOf(q) !== -1 || (TIPI[a.tipo]||TIPI.altro).label.toLowerCase().indexOf(q) !== -1; }); }
+  acts.sort(function(x,y){ return y.data.localeCompare(x.data); });
+  let h = '<div class="card"><div class="filters">' +
+    '<div><label>Cerca nello storico</label><input data-filter="storicoq" value="' + esc(storicoQ) + '" placeholder="Paziente o tipo esame..."></div></div>' +
+    (canPlan() ? '<button class="btn btn-ghost" data-action="export" style="width:100%;margin-bottom:10px">&#11015; Esporta CSV completo</button>' : '') +
+    '<div class="hint" style="margin-bottom:8px">' + acts.length + ' attivit&agrave; concluse</div>';
+  if (!acts.length) { h += '<div class="empty">Nessuna attivit&agrave; conclusa.</div></div>'; return h; }
+  let lastM = null;
+  acts.forEach(function(a){
+    const m = a.data.slice(0,7);
+    if (m !== lastM) { lastM = m; h += '<div class="day-head">' + MESI[Number(m.slice(5,7))-1] + ' ' + m.slice(0,4) + '</div>'; }
+    h += actCard(a);
+  });
+  h += '</div>';
+  return h;
+}
+
+function viewPazienti() {
+  const ps = patients.slice().sort(function(a,b){ return (a.cognome + a.nome).localeCompare(b.cognome + b.nome); });
+  let h = '';
+  if (canPlan()) h += '<button class="btn btn-primary" data-action="new-pat" style="width:100%;margin-bottom:12px">+ Nuovo paziente</button>';
+  h += '<div class="card">';
+  if (!ps.length) { h += '<div class="empty">Nessun paziente in anagrafica.</div></div>'; return h; }
+  ps.forEach(function(p){
+    const aperte = activities.filter(function(a){ return a.patient_id === p.id && (a.stato === 'programmata' || a.stato === 'in_corso'); }).length;
+    h += '<div class="pat-card" data-pat="' + p.id + '">' +
+      '<div class="info"><div class="nome">' + esc(p.cognome + ' ' + p.nome) + '</div>' +
+      '<div class="sub">' + esc(p.comune || '') + (p.dispositivo ? ' &middot; ' + esc(p.dispositivo) : '') + '</div></div>' +
+      (aperte ? '<span class="badge b-prog">' + aperte + '</span>' : '') +
+    '</div>';
+  });
+  h += '</div>';
+  return h;
+}
+
+function render() {
+  const views = { oggi: viewOggi, agenda: viewAgenda, storico: viewStorico, pazienti: viewPazienti };
+  document.getElementById('main').innerHTML = views[currentView]();
+  const navBtns = document.querySelectorAll('#bottomnav button');
+  navBtns.forEach(function(b){ b.classList.toggle('active', b.dataset.action === 'nav-' + currentView); });
+  document.getElementById('fabBtn').style.display = canPlan() ? 'block' : 'none';
+}
+
+/* ---------- modal ---------- */
+function openModal(html) { document.getElementById('modalBox').innerHTML = html; document.getElementById('overlay').classList.add('open'); }
+function closeModal() { document.getElementById('overlay').classList.remove('open'); pendingPhotos = []; }
+function modalHead(title) { return '<h3>' + esc(title) + '<button class="x" data-action="close-modal">&#10005;</button></h3>'; }
+
+/* ---------- dettaglio attivita ---------- */
+async function openDetail(id) {
+  const a = activities.find(function(x){ return x.id === id; });
+  if (!a) return;
+  const t = TIPI[a.tipo] || TIPI.altro;
+  const p = patient(a.patient_id);
+  let h = modalHead(t.label);
+  h += '<div class="kv">' +
+    '<div class="k">Paziente</div><div><strong>' + esc(patientName(a.patient_id)) + '</strong></div>' +
+    (p && p.telefono ? '<div class="k">Telefono</div><div><a href="tel:' + esc(p.telefono) + '">' + esc(p.telefono) + '</a></div>' : '') +
+    (p && p.indirizzo ? '<div class="k">Indirizzo</div><div>' + esc(p.indirizzo) + (p.comune ? ', ' + esc(p.comune) : '') + '</div>' : '') +
+    '<div class="k">Fase</div><div>' + FASI[a.fase || 'unica'] + '</div>' +
+    '<div class="k">Data prevista</div><div>' + fmtDate(a.data) + (a.fascia && a.fascia !== 'qualsiasi' ? ' &middot; ' + FASCE[a.fascia] : '') + '</div>' +
+    '<div class="k">Priorit&agrave;</div><div>' + (a.priorita === 'urgente' ? '<span class="badge b-urg">URGENTE</span>' : 'Normale') + '</div>' +
+    '<div class="k">Stato</div><div>' + statoBadge(a) + '</div>' +
+    '<div class="k">Creata da</div><div>' + esc(a.created_by || '-') + ' &middot; ' + fmtDateTime(a.created_at) + '</div>' +
+    (a.note ? '<div class="k">Note</div><div>' + esc(a.note) + '</div>' : '') +
+  '</div>';
+  if (a.stato === 'completata') {
+    h += '<div class="esito-box"><div style="font-weight:700;margin-bottom:6px">&#9989; Esito &middot; ' + esc(a.eseguita_da || '') + ' &middot; ' + fmtDateTime(a.completed_at) + '</div><div class="kv" style="margin:0">';
+    (ESITO_FIELDS[a.tipo] || []).forEach(function(f){
+      const v = a.esito ? a.esito[f[0]] : null;
+      if (v !== null && v !== undefined && v !== '') h += '<div class="k">' + f[1] + '</div><div>' + esc(v) + '</div>';
+    });
+    if (a.esito_note) h += '<div class="k">Note esito</div><div>' + esc(a.esito_note) + '</div>';
+    h += '</div></div>';
+  }
+  if (a.photos && a.photos.length) h += '<div style="font-weight:700;font-size:13.5px;margin-top:12px">Foto (' + a.photos.length + ')</div><div class="photo-grid" id="detailPhotos"><div class="hint">Caricamento foto...</div></div>';
+  h += '<div class="actions">';
+  if (a.stato === 'programmata') {
+    h += '<button class="btn btn-ghost" data-action="incarico" data-id="' + a.id + '">&#9654; Prendi in carico</button>';
+    h += '<button class="btn btn-ok" data-action="open-complete" data-id="' + a.id + '">&#10004; Completa</button>';
+    if (canPlan()) {
+      h += '<button class="btn btn-ghost" data-action="edit-act" data-id="' + a.id + '">&#9998; Modifica</button>';
+      h += '<button class="btn btn-danger" data-action="annulla" data-id="' + a.id + '">Annulla</button>';
+    }
+  } else if (a.stato === 'in_corso') {
+    h += '<button class="btn btn-ok" data-action="open-complete" data-id="' + a.id + '">&#10004; Completa</button>';
+    h += '<button class="btn btn-ghost" data-action="riprogramma" data-id="' + a.id + '">&#8617; Riporta a programmata</button>';
+    if (canPlan()) h += '<button class="btn btn-ghost" data-action="edit-act" data-id="' + a.id + '">&#9998; Modifica</button>';
+  } else if (canPlan()) {
+    h += '<button class="btn btn-ghost" data-action="riprogramma" data-id="' + a.id + '">&#8617; Riapri</button>';
+    h += '<button class="btn btn-danger" data-action="delete-act" data-id="' + a.id + '">&#128465; Elimina</button>';
+  }
+  h += '</div>';
+  openModal(h);
+  if (a.photos && a.photos.length) loadPhotos(a.photos, 'detailPhotos');
+}
+
+async function loadPhotos(paths, elId) {
+  const res = await sb.storage.from('vt-foto').createSignedUrls(paths, 3600);
+  const el = document.getElementById(elId);
+  if (!el) return;
+  if (res.error || !res.data) { el.innerHTML = '<div class="hint">Errore caricamento foto</div>'; return; }
+  el.innerHTML = res.data.map(function(u){ return u.signedUrl ? '<img src="' + u.signedUrl + '" data-photo-url="' + u.signedUrl + '">' : ''; }).join('');
+}
+
+/* ---------- azioni stato ---------- */
+async function setStato(id, stato) {
+  const upd = { stato: stato };
+  if (stato !== 'completata') { upd.completed_at = null; upd.eseguita_da = null; }
+  const r = await sb.from('vt_activities').update(upd).eq('id', id);
+  if (r.error) { showToast('Errore: ' + r.error.message); return; }
+  closeModal(); await refresh();
+}
+
+/* ---------- form attivita ---------- */
+function photoInputHtml() {
+  return '<div class="frow full"><div><label>Foto (prescrizione, richiesta, documenti)</label>' +
+    '<input type="file" accept="image/*" capture="environment" data-file="act-photo" class="photo-add">' +
+    '<div class="photo-grid" id="pendingGrid"></div>' +
+    '<div class="hint">Puoi scattare una foto alla richiesta del medico: chi la riceve vede subito tutto.</div></div></div>';
+}
+function renderPendingGrid() {
+  const g = document.getElementById('pendingGrid');
+  if (g) g.innerHTML = pendingPhotos.map(function(){ return '<div style="width:74px;height:74px;border-radius:10px;background:var(--ok-soft);display:flex;align-items:center;justify-content:center;font-size:22px">&#9989;</div>'; }).join('');
+}
+
+function openActForm(id) {
+  const a = id ? activities.find(function(x){ return x.id === id; }) : null;
+  if (!patients.length) { showToast('Prima inserisci un paziente in anagrafica'); return; }
+  pendingPhotos = [];
+  const ps = patients.slice().sort(function(x,y){ return (x.cognome + x.nome).localeCompare(y.cognome + y.nome); });
+  let h = modalHead(a ? 'Modifica attivitÃ ' : 'Nuova attivitÃ ');
+  h += '<form id="mform" data-form="act" data-id="' + (a ? a.id : '') + '">';
+  h += '<div class="frow full"><div><label>Paziente *</label><select name="patient_id" required>' +
+    ps.map(function(p){ return '<option value="' + p.id + '"' + (a && a.patient_id === p.id ? ' selected' : '') + '>' + esc(p.cognome + ' ' + p.nome) + '</option>'; }).join('') + '</select></div></div>';
+  h += '<div class="frow"><div><label>Tipo *</label><select name="tipo" required>' +
+    Object.keys(TIPI).map(function(t){ return '<option value="' + t + '"' + (a && a.tipo === t ? ' selected' : '') + '>' + TIPI[t].label + '</option>'; }).join('') + '</select></div>' +
+    '<div><label>Fase</label><select name="fase">' +
+    Object.keys(FASI).map(function(f){ return '<option value="' + f + '"' + (a && a.fase === f ? ' selected' : '') + '>' + FASI[f] + '</option>'; }).join('') + '</select></div></div>';
+  h += '<div class="frow"><div><label>Data prevista *</label><input type="date" name="data" required value="' + (a ? a.data : todayStr()) + '"></div>' +
+    '<div><label>Fascia oraria</label><select name="fascia">' +
+    Object.keys(FASCE).map(function(f){ return '<option value="' + f + '"' + (a && a.fascia === f ? ' selected' : '') + '>' + FASCE[f] + '</option>'; }).join('') + '</select></div></div>';
+  h += '<div class="frow"><div><label>Priorit&agrave;</label><select name="priorita"><option value="normale">Normale</option><option value="urgente"' + (a && a.priorita === 'urgente' ? ' selected' : '') + '>Urgente</option></select></div><div></div></div>';
+  h += '<div class="frow full"><div><label>Note per il tecnico</label><textarea name="note" rows="3" placeholder="Indicazioni, prescrizione, materiale...">' + esc(a ? a.note : '') + '</textarea></div></div>';
+  h += photoInputHtml();
+  h += '<div class="actions"><button type="button" class="btn btn-ghost" data-action="close-modal">Annulla</button><button type="submit" class="btn btn-primary">' + (a ? 'Salva modifiche' : 'Crea attivitÃ ') + '</button></div></form>';
+  openModal(h);
+}
+
+async function submitAct(form) {
+  const id = form.dataset.id || crypto.randomUUID();
+  const isNew = !form.dataset.id;
+  const data = {
+    patient_id: form.patient_id.value, tipo: form.tipo.value, fase: form.fase.value,
+    data: form.data.value, fascia: form.fascia.value, priorita: form.priorita.value,
+    note: form.note.value.trim()
+  };
+  let r;
+  if (isNew) {
+    data.id = id;
+    data.created_by = me.name;
+    data.photos = pendingPhotos;
+    r = await sb.from('vt_activities').insert(data);
+  } else {
+    if (pendingPhotos.length) {
+      const cur = activities.find(function(x){ return x.id === id; });
+      data.photos = (cur.photos || []).concat(pendingPhotos);
+    }
+    r = await sb.from('vt_activities').update(data).eq('id', id);
+  }
+  if (r.error) { showToast('Errore: ' + r.error.message); return; }
+  closeModal(); await refresh();
+  showToast(isNew ? 'AttivitÃ  creata' : 'Modifiche salvate');
+  if (isNew) sb.functions.invoke('notify', { body: { action: 'notify_new', activity_id: id } }).catch(function(){});
+}
+
+/* ---------- completamento ---------- */
+function openCompleteForm(id) {
+  const a = activities.find(function(x){ return x.id === id; });
+  if (!a) return;
+  pendingPhotos = [];
+  const fields = ESITO_FIELDS[a.tipo] || [];
+  const conDati = a.fase === 'ritiro' || a.fase === 'unica' || !a.fase;
+  let h = modalHead('Completa: ' + (TIPI[a.tipo] || TIPI.altro).label);
+  h += '<div class="hint" style="margin-bottom:12px">Paziente: <strong>' + esc(patientName(a.patient_id)) + '</strong> &middot; ' + FASI[a.fase || 'unica'] + '</div>';
+  h += '<form id="mform" data-form="complete" data-id="' + a.id + '">';
+  if (fields.length && conDati) {
+    h += '<div class="frow">';
+    fields.forEach(function(f, i){
+      h += '<div><label>' + f[1] + '</label><input type="' + f[2] + '" step="any" name="esito_' + f[0] + '" value="' + esc(a.esito && a.esito[f[0]] != null ? a.esito[f[0]] : '') + '"></div>';
+      if (i % 2 === 1 && i < fields.length - 1) h += '</div><div class="frow">';
+    });
+    h += '</div>';
+  } else if (fields.length) {
+    h += '<div class="hint" style="margin-bottom:10px">Fase di consegna: i dati esame si inseriranno al ritiro.</div>';
+  }
+  h += '<div class="frow full"><div><label>Note esito / osservazioni</label><textarea name="esito_note" rows="3">' + esc(a.esito_note || '') + '</textarea></div></div>';
+  h += photoInputHtml();
+  h += '<div class="actions"><button type="button" class="btn btn-ghost" data-action="close-modal">Annulla</button><button type="submit" class="btn btn-ok">&#10004; Completata</button></div></form>';
+  openModal(h);
+}
+
+async function submitComplete(form) {
+  const id = form.dataset.id;
+  const a = activities.find(function(x){ return x.id === id; });
+  const fields = ESITO_FIELDS[a.tipo] || [];
+  const esito = {};
+  fields.forEach(function(fd){
+    const el = form.elements['esito_' + fd[0]];
+    if (el && el.value !== '') esito[fd[0]] = el.value;
+  });
+  const upd = {
+    stato: 'completata',
+    esito: Object.keys(esito).length ? esito : null,
+    esito_note: form.esito_note.value.trim(),
+    completed_at: new Date().toISOString(),
+    eseguita_da: me.name,
+    photos: (a.photos || []).concat(pendingPhotos)
+  };
+  const r = await sb.from('vt_activities').update(upd).eq('id', id);
+  if (r.error) { showToast('Errore: ' + r.error.message); return; }
+  closeModal(); await refresh();
+  showToast('AttivitÃ  completata');
+  sb.functions.invoke('notify', { body: { action: 'notify_done', activity_id: id } }).catch(function(){});
+}
+
+/* ---------- pazienti ---------- */
+function openPatientForm(id) {
+  const p = id ? patient(id) : null;
+  let h = modalHead(p ? 'Modifica paziente' : 'Nuovo paziente');
+  h += '<form id="mform" data-form="patient" data-id="' + (p ? p.id : '') + '">';
+  h += '<div class="frow"><div><label>Cognome *</label><input name="cognome" required value="' + esc(p ? p.cognome : '') + '"></div><div><label>Nome *</label><input name="nome" required value="' + esc(p ? p.nome : '') + '"></div></div>';
+  h += '<div class="frow"><div><label>Telefono</label><input name="telefono" value="' + esc(p ? p.telefono : '') + '"></div><div><label>Comune</label><input name="comune" value="' + esc(p ? p.comune : '') + '"></div></div>';
+  h += '<div class="frow full"><div><label>Indirizzo</label><input name="indirizzo" value="' + esc(p ? p.indirizzo : '') + '"></div></div>';
+  h += '<div class="frow full"><div><label>Dispositivo in dotazione</label><input name="dispositivo" value="' + esc(p ? p.dispositivo : '') + '"></div></div>';
+  h += '<div class="frow full"><div><label>Note cliniche / caregiver</label><textarea name="note" rows="3">' + esc(p ? p.note : '') + '</textarea></div></div>';
+  h += '<div class="actions">' +
+    (p && canPlan() ? '<button type="button" class="btn btn-danger" data-action="delete-pat" data-id="' + p.id + '" style="margin-right:auto">&#128465;</button>' : '') +
+    '<button type="button" class="btn btn-ghost" data-action="close-modal">Annulla</button><button type="submit" class="btn btn-primary">Salva</button></div></form>';
+  openModal(h);
+}
+
+async function submitPatient(form) {
+  const id = form.dataset.id;
+  const data = {
+    cognome: form.cognome.value.trim(), nome: form.nome.value.trim(),
+    telefono: form.telefono.value.trim(), comune: form.comune.value.trim(),
+    indirizzo: form.indirizzo.value.trim(), dispositivo: form.dispositivo.value.trim(),
+    note: form.note.value.trim()
+  };
+  const r = id ? await sb.from('vt_patients').update(data).eq('id', id) : await sb.from('vt_patients').insert(data);
+  if (r.error) { showToast('Errore: ' + r.error.message); return; }
+  closeModal(); await refresh();
+}
+
+function openPatientDetail(id) {
+  const p = patient(id);
+  if (!p) return;
+  const storia = activities.filter(function(a){ return a.patient_id === id; }).sort(function(x,y){ return y.data.localeCompare(x.data); });
+  let h = modalHead(p.cognome + ' ' + p.nome);
+  h += '<div class="kv">' +
+    (p.telefono ? '<div class="k">Telefono</div><div><a href="tel:' + esc(p.telefono) + '">' + esc(p.telefono) + '</a></div>' : '') +
+    (p.indirizzo || p.comune ? '<div class="k">Indirizzo</div><div>' + esc(p.indirizzo || '') + (p.comune ? ', ' + esc(p.comune) : '') + '</div>' : '') +
+    (p.dispositivo ? '<div class="k">Dispositivo</div><div>' + esc(p.dispositivo) + '</div>' : '') +
+    (p.note ? '<div class="k">Note</div><div>' + esc(p.note) + '</div>' : '') +
+  '</div>';
+  h += '<div style="font-weight:700;font-size:14px;margin:12px 0 8px">Storico (' + storia.length + ')</div>';
+  h += storia.length ? storia.map(actCard).join('') : '<div class="empty">Nessuna attivit&agrave;.</div>';
+  h += '<div class="actions">' +
+    (canPlan() ? '<button class="btn btn-ghost" data-action="edit-pat" data-id="' + p.id + '">&#9998; Modifica</button>' : '') +
+    '<button class="btn btn-ghost" data-action="close-modal">Chiudi</button></div>';
+  openModal(h);
+}
+
+/* ---------- foto: compressione e upload ---------- */
+async function compressImage(file) {
+  const bmp = await createImageBitmap(file);
+  const max = 1600;
+  let w = bmp.width, ht = bmp.height;
+  if (w > max || ht > max) { const k = Math.min(max / w, max / ht); w = Math.round(w * k); ht = Math.round(ht * k); }
+  const canvas = document.createElement('canvas');
+  canvas.width = w; canvas.height = ht;
+  canvas.getContext('2d').drawImage(bmp, 0, 0, w, ht);
+  return new Promise(function(resolve){ canvas.toBlob(resolve, 'image/jpeg', 0.82); });
+}
+
+async function handlePhotoInput(input) {
+  const file = input.files[0];
+  if (!file) return;
+  input.disabled = true;
+  showToast('Caricamento foto...');
+  try {
+    const blob = await compressImage(file);
+    const path = 'act/' + Date.now() + '-' + Math.random().toString(36).slice(2, 8) + '.jpg';
+    const r = await sb.storage.from('vt-foto').upload(path, blob, { contentType: 'image/jpeg' });
+    if (r.error) { showToast('Errore upload: ' + r.error.message); }
+    else { pendingPhotos.push(path); renderPendingGrid(); showToast('Foto caricata (' + pendingPhotos.length + ')'); }
+  } catch (e) { showToast('Errore foto'); }
+  input.disabled = false;
+  input.value = '';
+}
+
+/* ---------- export CSV ---------- */
+function exportCSV() {
+  const sep = ';';
+  const head = ['Data','Tipo','Fase','Paziente','Comune','Stato','Priorita','Creata da','Eseguita da','Completata il','Note','Esito','Note esito'];
+  const rows = activities.slice().sort(function(x,y){ return x.data.localeCompare(y.data); }).map(function(a){
+    const p = patient(a.patient_id);
+    const esitoTxt = a.esito ? Object.entries(a.esito).map(function(e){ return e[0] + '=' + e[1]; }).join(' | ') : '';
+    return [a.data, (TIPI[a.tipo]||TIPI.altro).label, FASI[a.fase||'unica'], patientName(a.patient_id), p ? (p.comune||'') : '', STATI[a.stato].label, a.priorita||'normale', a.created_by||'', a.eseguita_da||'', a.completed_at ? new Date(a.completed_at).toLocaleString('it-IT') : '', a.note||'', esitoTxt, a.esito_note||''].map(function(v){ return '"' + String(v).replace(/"/g, '""') + '"'; }).join(sep);
+  });
+  const blob = new Blob([String.fromCharCode(65279) + head.join(sep) + NL() + rows.join(NL())], { type: 'text/csv;charset=utf-8' });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = 'attivita_ventilotech_' + todayStr() + '.csv';
+  link.click();
+  URL.revokeObjectURL(link.href);
+}
+
+/* ---------- notifiche push ---------- */
+function b64ToBytes(s) {
+  let p = s.replace(/-/g, '+').replace(/_/g, '/');
+  while (p.length % 4) p += '=';
+  const raw = atob(p);
+  const arr = new Uint8Array(raw.length);
+  for (let i = 0; i < raw.length; i++) arr[i] = raw.charCodeAt(i);
+  return arr;
+}
+
+async function updateBellUI() {
+  const btn = document.getElementById('bellBtn');
+  try {
+    const reg = await navigator.serviceWorker.ready;
+    const sub = await reg.pushManager.getSubscription();
+    btn.innerHTML = sub ? '&#128276;' : '&#128277;';
+    btn.title = sub ? 'Notifiche attive - tocca per disattivare' : 'Notifiche spente - tocca per attivare';
+  } catch (e) { btn.innerHTML = '&#128277;'; }
+}
+
+async function togglePush() {
+  if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+    showToast('Notifiche non supportate su questo browser. Su iPhone: aggiungi prima lâapp alla schermata Home.');
+    return;
+  }
+  try {
+    const reg = await navigator.serviceWorker.ready;
+    const existing = await reg.pushManager.getSubscription();
+    if (existing) {
+      await sb.from('vt_push_subscriptions').delete().eq('endpoint', existing.endpoint);
+      await existing.unsubscribe();
+      showToast('Notifiche disattivate');
+    } else {
+      const perm = await Notification.requestPermission();
+      if (perm !== 'granted') { showToast('Permesso notifiche negato'); return; }
+      const vr = await sb.functions.invoke('notify', { body: { action: 'vapid_public_key' } });
+      if (vr.error || !vr.data || !vr.data.key) { showToast('Errore configurazione notifiche'); return; }
+      const sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64ToBytes(vr.data.key) });
+      const r = await sb.from('vt_push_subscriptions').upsert({ user_id: me.id, endpoint: sub.endpoint, subscription: sub.toJSON() }, { onConflict: 'endpoint' });
+      if (r.error) { showToast('Errore salvataggio: ' + r.error.message); return; }
+      showToast('&#128276; Notifiche attivate su questo dispositivo');
+    }
+  } catch (e) { showToast('Errore notifiche: ' + (e.message || e)); }
+  updateBellUI();
+}
+
+/* ---------- dati ---------- */
+async function refresh() {
+  const rs = await Promise.all([
+    sb.from('vt_patients').select('*').order('cognome'),
+    sb.from('vt_activities').select('*').order('data')
+  ]);
+  if (rs[0].data) patients = rs[0].data;
+  if (rs[1].data) activities = rs[1].data;
+  render();
+}
+
+function subscribeRealtime() {
+  sb.channel('vt-acts')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'vt_activities' }, function(payload){
+      clearTimeout(refreshTimer);
+      refreshTimer = setTimeout(refresh, 400);
+      if (payload.eventType === 'INSERT' && payload.new && payload.new.created_by !== me.name) {
+        const t = TIPI[payload.new.tipo] || TIPI.altro;
+        showToast('&#10133; Nuova attivitÃ : ' + t.label + ' (' + fmtDate(payload.new.data) + ')');
+      }
+    })
+    .subscribe();
+}
+
+/* ---------- auth ---------- */
+async function start(session) {
+  const prof = await sb.from('vt_profiles').select('*').eq('user_id', session.user.id).maybeSingle();
+  if (!prof.data) {
+    document.getElementById('loginErr').textContent = 'Profilo operatore non trovato per questo utente.';
+    document.getElementById('loginErr').style.display = 'block';
+    await sb.auth.signOut();
+    return;
+  }
+  me = { id: session.user.id, name: prof.data.display_name, role: prof.data.role };
+  document.getElementById('loginBox').style.display = 'none';
+  document.getElementById('appBox').style.display = 'block';
+  document.getElementById('userBtn').textContent = me.name + ' &#10162;'.replace('&#10162;', '');
+  document.getElementById('userBtn').textContent = me.name;
+  if ('serviceWorker' in navigator) {
+    try { await navigator.serviceWorker.register(APP_BASE + 'sw.js', { scope: APP_BASE }); } catch (e) {}
+  }
+  await refresh();
+  subscribeRealtime();
+  updateBellUI();
+}
+
+function showLogin() {
+  document.getElementById('loginBox').style.display = 'block';
+  document.getElementById('appBox').style.display = 'none';
+  me = null;
+}
+
+document.getElementById('loginForm').addEventListener('submit', async function(ev){
+  ev.preventDefault();
+  const f = ev.target;
+  const errEl = document.getElementById('loginErr');
+  errEl.style.display = 'none';
+  const r = await sb.auth.signInWithPassword({ email: f.email.value.trim(), password: f.password.value });
+  if (r.error) { errEl.textContent = 'Accesso negato: controlla email e password.'; errEl.style.display = 'block'; return; }
+  start(r.data.session);
+});
+
+/* ---------- delega eventi ---------- */
+document.body.addEventListener('click', function(ev){
+  const img = ev.target.closest('[data-photo-url]');
+  if (img) { window.open(img.dataset.photoUrl, '_blank'); return; }
+  const el = ev.target.closest('[data-action]');
+  if (el) { handleAction(el.dataset.action, el.dataset.id); return; }
+  const act = ev.target.closest('[data-act]');
+  if (act) { openDetail(act.dataset.act); return; }
+  const pat = ev.target.closest('[data-pat]');
+  if (pat) { openPatientDetail(pat.dataset.pat); return; }
+  if (ev.target === document.getElementById('overlay')) closeModal();
+});
+
+document.body.addEventListener('submit', function(ev){
+  const form = ev.target;
+  if (!form.dataset || !form.dataset.form) return;
+  ev.preventDefault();
+  if (form.dataset.form === 'act') submitAct(form);
+  else if (form.dataset.form === 'complete') submitComplete(form);
+  else if (form.dataset.form === 'patient') submitPatient(form);
+});
+
+document.body.addEventListener('change', function(ev){
+  const el = ev.target;
+  if (el.dataset && el.dataset.file === 'act-photo') { handlePhotoInput(el); return; }
+  if (el.dataset && el.dataset.filter) {
+    if (el.dataset.filter === 'stato') { filtri.stato = el.value; render(); }
+    else if (el.dataset.filter === 'tipo') { filtri.tipo = el.value; render(); }
+  }
+});
+
+document.body.addEventListener('input', function(ev){
+  const el = ev.target;
+  if (!el.dataset || !el.dataset.filter) return;
+  if (el.dataset.filter === 'q') { filtri.q = el.value; renderListOnly(); }
+  else if (el.dataset.filter === 'storicoq') { storicoQ = el.value; renderListOnly(); }
+});
+
+function renderListOnly() {
+  const active = document.activeElement;
+  const val = active ? active.value : '';
+  const filterKey = active && active.dataset ? active.dataset.filter : null;
+  render();
+  if (filterKey) {
+    const el = document.querySelector('[data-filter="' + filterKey + '"]');
+    if (el) { el.focus(); el.value = val; el.setSelectionRange(val.length, val.length); }
+  }
+}
+
+async function handleAction(action, id) {
+  switch (action) {
+    case 'nav-oggi': currentView = 'oggi'; render(); break;
+    case 'nav-agenda': currentView = 'agenda'; render(); break;
+    case 'nav-storico': currentView = 'storico'; render(); break;
+    case 'nav-pazienti': currentView = 'pazienti'; render(); break;
+    case 'close-modal': closeModal(); break;
+    case 'new-act': openActForm(); break;
+    case 'edit-act': openActForm(id); break;
+    case 'new-pat': openPatientForm(); break;
+    case 'edit-pat': openPatientForm(id); break;
+    case 'incarico': await setStato(id, 'in_corso'); break;
+    case 'riprogramma': await setStato(id, 'programmata'); break;
+    case 'annulla': if (confirm("Annullare questa attivitÃ ?")) await setStato(id, 'annullata'); break;
+    case 'delete-act':
+      if (confirm("Eliminare definitivamente questa attivitÃ ?")) {
+        const r = await sb.from('vt_activities').delete().eq('id', id);
+        if (r.error) showToast('Errore: ' + r.error.message);
+        closeModal(); await refresh();
+      }
+      break;
+    case 'delete-pat':
+      if (confirm("Eliminare il paziente e tutte le sue attivitÃ ?")) {
+        const r = await sb.from('vt_patients').delete().eq('id', id);
+        if (r.error) showToast('Errore: ' + r.error.message);
+        closeModal(); await refresh();
+      }
+      break;
+    case 'open-complete': openCompleteForm(id); break;
+    case 'export': exportCSV(); break;
+    case 'bell': togglePush(); break;
+    case 'logout':
+      if (confirm('Uscire da VentiloTech?')) { await sb.auth.signOut(); location.reload(); }
+      break;
+  }
+}
+
+/* ---------- avvio ---------- */
+(async function(){
+  const s = await sb.auth.getSession();
+  if (s.data && s.data.session) start(s.data.session);
+  else showLogin();
+})();
+</script>
+</body>
+</html>
