@@ -85,7 +85,7 @@ main{max-width:640px;margin:0 auto;padding:14px 14px 90px}
     <h1>&#129515; VentiloTech</h1>
     <div class="sub">Gestione ventiloterapia domiciliare</div>
     <form id="loginForm">
-      <div class="frow full"><div><label>Email</label><input type="email" name="email" required autocomplete="username" placeholder="nome@ventilotech.app"></div></div>
+      <div class="frow full"><div><label>Nome utente</label><input type="text" name="email" required autocomplete="username" autocapitalize="none" placeholder="es. Antonio"></div></div>
       <div class="frow full"><div><label>Password</label><input type="password" name="password" required autocomplete="current-password"></div></div>
       <button type="submit" class="btn btn-primary" style="width:100%">Accedi</button>
       <div id="loginErr" class="err" style="display:none"></div>
@@ -674,8 +674,10 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
   const f = ev.target;
   const errEl = document.getElementById('loginErr');
   errEl.style.display = 'none';
-  const r = await sb.auth.signInWithPassword({ email: f.email.value.trim(), password: f.password.value });
-  if (r.error) { errEl.textContent = 'Accesso negato: controlla email e password.'; errEl.style.display = 'block'; return; }
+  let em = f.email.value.trim().toLowerCase();
+  if (em.indexOf('@') === -1) em = em + '@ventilotech.app';
+  const r = await sb.auth.signInWithPassword({ email: em, password: f.password.value });
+  if (r.error) { errEl.textContent = 'Accesso negato: controlla nome utente e password.'; errEl.style.display = 'block'; return; }
   start(r.data.session);
 });
 
