@@ -1,5 +1,5 @@
-var CACHE = 'immobiliare-v1';
-var SHELL = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png'];
+var CACHE = 'immobiliare-v2';
+var SHELL = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png', './logo.png'];
 
 self.addEventListener('install', function (e) {
   e.waitUntil(caches.open(CACHE).then(function (c) { return c.addAll(SHELL); }).then(function () { return self.skipWaiting(); }));
