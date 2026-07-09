@@ -1,0 +1,962 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0f766e">
+<link rel="manifest" href="./manifest.json">
+<link rel="icon" href="./icon-192.png">
+<link rel="apple-touch-icon" href="./icon-192.png">
+<title>GARD Immobiliare</title>
+<style>
+:root{--bg:#f1f5f9;--card:#fff;--ink:#0f172a;--muted:#64748b;--line:#e2e8f0;--primary:#0f766e;--primary-soft:#ccfbf1;--danger:#dc2626;--danger-soft:#fee2e2;--ok:#059669;--ok-soft:#d1fae5;--warn:#d97706;--warn-soft:#fef3c7;--info:#0369a1;--info-soft:#e0f2fe;--radius:12px;--shadow:0 1px 3px rgba(15,23,42,.08),0 4px 12px rgba(15,23,42,.05)}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--ink);font-size:15px}
+button{font-family:inherit;cursor:pointer}
+input,select,textarea{font-family:inherit;font-size:16px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;width:100%;background:#fff;color:var(--ink)}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--primary-soft);border-color:var(--primary)}
+label{font-size:12.5px;font-weight:600;color:var(--muted);display:block;margin-bottom:4px}
+.topbar{background:var(--primary);color:#fff;padding:12px 16px;padding-top:calc(12px + env(safe-area-inset-top));display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:50}
+.topbar .logo{font-size:17px;font-weight:800;flex:1}
+.topbar button{background:rgba(255,255,255,.15);border:none;color:#fff;border-radius:99px;padding:7px 12px;font-size:13px;font-weight:600}
+main{max-width:640px;margin:0 auto;padding:14px 14px 90px}
+.btn{border:none;border-radius:10px;padding:11px 16px;font-size:14.5px;font-weight:600}
+.btn-primary{background:var(--primary);color:#fff}
+.btn-ghost{background:#fff;border:1px solid var(--line);color:var(--ink)}
+.btn-ok{background:var(--ok);color:#fff}
+.btn-danger{background:var(--danger-soft);color:var(--danger)}
+.btn-sm{padding:7px 12px;font-size:13px}
+.card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px;margin-bottom:14px}
+.card h2{font-size:15.5px;margin-bottom:10px}
+.grid-stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.stat{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:12px 14px;cursor:pointer}
+.stat .num{font-size:26px;font-weight:800}
+.stat .lbl{font-size:12px;color:var(--muted);font-weight:600}
+.stat.c-ok .num{color:var(--ok)}.stat.c-warn .num{color:var(--warn)}.stat.c-primary .num{color:var(--primary)}.stat.c-danger .num{color:var(--danger)}
+.item{display:flex;gap:10px;align-items:flex-start;padding:12px;border:1px solid var(--line);border-radius:10px;margin-bottom:8px;background:#fff;cursor:pointer}
+.item .bar{width:5px;align-self:stretch;border-radius:4px;flex-shrink:0}
+.item .body{flex:1;min-width:0}
+.item .t1{font-weight:700;font-size:14px}
+.item .t2{font-size:12.5px;color:var(--muted);margin-top:2px}
+.item .t3{font-size:13px;font-weight:700;color:var(--primary);margin-top:2px}
+.item.done{opacity:.6}
+.item .thumb{width:58px;height:58px;object-fit:cover;border-radius:8px;flex-shrink:0;border:1px solid var(--line)}
+.item .thumb-ph{width:58px;height:58px;border-radius:8px;flex-shrink:0;background:var(--primary-soft);display:flex;align-items:center;justify-content:center;font-size:24px}
+.badge{display:inline-block;font-size:11px;font-weight:700;padding:2px 9px;border-radius:99px;white-space:nowrap}
+.b-ok{background:var(--ok-soft);color:var(--ok)}.b-warn{background:var(--warn-soft);color:var(--warn)}.b-info{background:var(--info-soft);color:var(--info)}.b-muted{background:#f1f5f9;color:var(--muted)}.b-danger{background:var(--danger-soft);color:var(--danger)}.b-urg{background:var(--danger);color:#fff}.b-primary{background:var(--primary-soft);color:var(--primary)}
+.day-head{font-size:12.5px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin:16px 0 8px}
+.day-head.today{color:var(--primary)}.day-head.late{color:var(--danger)}
+.filters{display:flex;flex-direction:column;gap:8px;margin-bottom:12px}
+.filters .row2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.filters .row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.overlay{position:fixed;inset:0;background:rgba(15,23,42,.5);display:none;align-items:flex-end;justify-content:center;z-index:100}
+.overlay.open{display:flex}
+.modal{background:#fff;border-radius:18px 18px 0 0;width:100%;max-width:640px;padding:20px;padding-bottom:calc(20px + env(safe-area-inset-bottom));max-height:88vh;overflow-y:auto}
+@media(min-width:700px){.overlay{align-items:center;padding:20px}.modal{border-radius:16px}}
+.modal h3{font-size:16.5px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center}
+.modal h3 .x{background:none;border:none;font-size:22px;color:var(--muted);line-height:1}
+.frow{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+.frow.full{grid-template-columns:1fr}
+.modal .actions{display:flex;gap:8px;justify-content:flex-end;margin-top:14px;flex-wrap:wrap}
+.kv{display:grid;grid-template-columns:130px 1fr;gap:6px 10px;font-size:14px;margin-bottom:10px}
+.kv .k{color:var(--muted);font-weight:600;font-size:12.5px}
+.match-box{background:var(--primary-soft);border-radius:10px;padding:12px;margin-top:10px}
+.match-box .mb-t{font-size:13px;font-weight:800;color:var(--primary);margin-bottom:8px}
+.rich-box{background:var(--info-soft);border-radius:10px;padding:12px;margin-top:8px;font-size:13.5px}
+.hint{font-size:12.5px;color:var(--muted);margin-top:4px}
+.empty{text-align:center;color:var(--muted);padding:26px 10px;font-size:14px}
+.bottomnav{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--line);display:flex;z-index:60;padding-bottom:env(safe-area-inset-bottom)}
+.bottomnav button{flex:1;background:none;border:none;padding:9px 4px 7px;font-size:10.5px;font-weight:600;color:var(--muted);display:flex;flex-direction:column;align-items:center;gap:2px}
+.bottomnav button .ico{font-size:20px}
+.bottomnav button.active{color:var(--primary)}
+.fab{position:fixed;right:16px;bottom:calc(74px + env(safe-area-inset-bottom));width:56px;height:56px;border-radius:50%;background:var(--primary);color:#fff;border:none;font-size:28px;box-shadow:0 6px 16px rgba(15,118,110,.4);z-index:60}
+#toast{position:fixed;top:calc(64px + env(safe-area-inset-top));left:50%;transform:translateX(-50%);background:#0f172a;color:#fff;padding:10px 18px;border-radius:99px;font-size:13.5px;font-weight:600;z-index:200;display:none;max-width:90%;box-shadow:0 8px 24px rgba(0,0,0,.3)}
+.photo-grid{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.photo-grid img{width:74px;height:74px;object-fit:cover;border-radius:10px;border:1px solid var(--line);cursor:pointer}
+.pipe-head{display:flex;justify-content:space-between;align-items:center;font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin:16px 0 8px}
+.quick-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.quick-grid button{background:#fff;border:1px solid var(--line);border-radius:12px;padding:18px 10px;font-size:14px;font-weight:700;display:flex;flex-direction:column;align-items:center;gap:6px}
+.quick-grid button .ico{font-size:26px}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.chips button{border:1px solid var(--line);background:#fff;border-radius:99px;padding:6px 12px;font-size:12.5px;font-weight:600;color:var(--ink)}
+.chips button.on{background:var(--primary);border-color:var(--primary);color:#fff}
+</style>
+</head>
+<body>
+
+<div id="appBox">
+  <div class="topbar">
+    <div class="logo">&#127968; GARD Immobiliare</div>
+    <button data-action="settings" title="Impostazioni">&#9881;&#65039;</button>
+  </div>
+  <main id="main"></main>
+  <button class="fab" data-action="fab" id="fabBtn">+</button>
+  <div class="bottomnav" id="bottomnav">
+    <button data-nav="home"><span class="ico">&#127968;</span>Home</button>
+    <button data-nav="immobili"><span class="ico">&#127976;</span>Immobili</button>
+    <button data-nav="contatti"><span class="ico">&#128101;</span>Contatti</button>
+    <button data-nav="agenda"><span class="ico">&#128197;</span>Agenda</button>
+    <button data-nav="trattative"><span class="ico">&#129309;</span>Trattative</button>
+  </div>
+</div>
+
+<div class="overlay" id="overlay"><div class="modal" id="modalBox"></div></div>
+<div id="toast"></div>
+
+<script>
+/* ================= COSTANTI ================= */
+const LS_KEY = 'gard_immobiliare_v1';
+
+const TIPI_IMM = {
+  appartamento: { label: 'Appartamento', ico: '\u{1F3E2}', color: '#0ea5e9' },
+  villa: { label: 'Villa', ico: '\u{1F3E1}', color: '#8b5cf6' },
+  casa_indipendente: { label: 'Casa indipendente', ico: '\u{1F3E0}', color: '#10b981' },
+  attico: { label: 'Attico', ico: '\u{1F306}', color: '#f59e0b' },
+  ufficio: { label: 'Ufficio', ico: '\u{1F4BC}', color: '#64748b' },
+  negozio: { label: 'Negozio / locale', ico: '\u{1F3EA}', color: '#ec4899' },
+  terreno: { label: 'Terreno', ico: '\u{1F33F}', color: '#84cc16' },
+  box: { label: 'Box / garage', ico: '\u{1F697}', color: '#78716c' },
+  altro: { label: 'Altro', ico: '\u{1F4CD}', color: '#94a3b8' }
+};
+const CONTRATTI = { vendita: 'Vendita', affitto: 'Affitto' };
+const STATI_IMM = {
+  disponibile: { label: 'Disponibile', cls: 'b-ok' },
+  trattativa: { label: 'In trattativa', cls: 'b-warn' },
+  venduto: { label: 'Venduto', cls: 'b-info' },
+  affittato: { label: 'Affittato', cls: 'b-info' },
+  sospeso: { label: 'Sospeso', cls: 'b-muted' }
+};
+const CLASSI_EN = ['A4','A3','A2','A1','B','C','D','E','F','G','In attesa'];
+
+const TIPI_CONTATTO = {
+  acquirente: { label: 'Acquirente', cls: 'b-primary' },
+  inquilino: { label: 'Cerca in affitto', cls: 'b-primary' },
+  venditore: { label: 'Venditore', cls: 'b-info' },
+  proprietario: { label: 'Proprietario (affitta)', cls: 'b-info' },
+  altro: { label: 'Altro', cls: 'b-muted' }
+};
+const STATI_LEAD = {
+  nuovo: { label: 'Nuovo lead', cls: 'b-urg' },
+  contattato: { label: 'Contattato', cls: 'b-warn' },
+  appuntamento: { label: 'Appuntamento', cls: 'b-info' },
+  cliente: { label: 'Cliente', cls: 'b-ok' },
+  perso: { label: 'Perso', cls: 'b-muted' }
+};
+const FONTI = { portale: 'Portale (Immobiliare.it, Idealista...)', sito: 'Sito web', telefonata: 'Telefonata', passaparola: 'Passaparola', social: 'Social', cartello: 'Cartello', altro: 'Altro' };
+
+const TIPI_APP = {
+  visita: { label: 'Visita immobile', color: '#0ea5e9' },
+  acquisizione: { label: 'Acquisizione / valutazione', color: '#8b5cf6' },
+  firma: { label: 'Firma proposta / incarico', color: '#f59e0b' },
+  rogito: { label: 'Rogito / contratto', color: '#10b981' },
+  telefonata: { label: 'Telefonata / follow-up', color: '#64748b' },
+  altro: { label: 'Altro', color: '#94a3b8' }
+};
+const STATI_APP = {
+  programmato: { label: 'Programmato', cls: 'b-primary' },
+  completato: { label: 'Completato', cls: 'b-ok' },
+  annullato: { label: 'Annullato', cls: 'b-muted' }
+};
+
+const FASI_TRATT = {
+  proposta: { label: 'Proposta', cls: 'b-primary', open: true },
+  negoziazione: { label: 'Negoziazione', cls: 'b-warn', open: true },
+  accettata: { label: 'Accettata', cls: 'b-info', open: true },
+  compromesso: { label: 'Compromesso', cls: 'b-info', open: true },
+  rogito: { label: 'Rogito / chiusa', cls: 'b-ok', open: false },
+  persa: { label: 'Persa', cls: 'b-muted', open: false }
+};
+
+/* ================= STATO ================= */
+let db = { immobili: [], contatti: [], appuntamenti: [], trattative: [] };
+let currentView = 'home';
+let fImm = { q: '', stato: 'attivi', contratto: '', tipo: '' };
+let fCon = { q: '', tipo: '', lead: '' };
+let fAge = { mostra: 'futuri' };
+let fTra = { mostra: 'aperte' };
+let pendingPhotos = [];
+
+function load() {
+  try { const raw = localStorage.getItem(LS_KEY); if (raw) db = Object.assign(db, JSON.parse(raw)); } catch (e) {}
+}
+function save() {
+  try { localStorage.setItem(LS_KEY, JSON.stringify(db)); }
+  catch (e) { showToast('Errore salvataggio: spazio esaurito. Riduci le foto o esporta un backup.'); }
+}
+function uid() { return 'x' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8); }
+
+/* ================= UTILITY ================= */
+function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+function todayStr(offset) { const d = new Date(); if (offset) d.setDate(d.getDate() + offset); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+function fmtDate(ds) {
+  if (!ds) return '-';
+  if (ds === todayStr()) return 'Oggi';
+  if (ds === todayStr(1)) return 'Domani';
+  if (ds === todayStr(-1)) return 'Ieri';
+  const p = ds.split('-');
+  return new Date(Number(p[0]), Number(p[1]) - 1, Number(p[2])).toLocaleDateString('it-IT', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
+}
+function fmtEur(n) {
+  if (n == null || n === '' || isNaN(n)) return '-';
+  return new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(Number(n));
+}
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.display = 'block';
+  clearTimeout(t._h);
+  t._h = setTimeout(() => { t.style.display = 'none'; }, 3500);
+}
+function opts(map, sel, useLabel) {
+  return Object.keys(map).map(k => {
+    const lbl = useLabel === false ? map[k] : (map[k].label || map[k]);
+    return '<option value="' + k + '"' + (k === sel ? ' selected' : '') + '>' + esc(lbl) + '</option>';
+  }).join('');
+}
+function immobile(id) { return db.immobili.find(i => i.id === id); }
+function contatto(id) { return db.contatti.find(c => c.id === id); }
+function contattoNome(id) { const c = contatto(id); return c ? (c.cognome + ' ' + c.nome).trim() : '(contatto eliminato)'; }
+function immobileTitolo(id) { const i = immobile(id); return i ? i.titolo : '(immobile eliminato)'; }
+function immDesc(i) {
+  const parts = [];
+  if (i.mq) parts.push(i.mq + ' m²');
+  if (i.locali) parts.push(i.locali + ' locali');
+  if (i.zona || i.citta) parts.push([i.zona, i.citta].filter(Boolean).join(', '));
+  return parts.join(' · ');
+}
+
+/* ================= MATCHING ================= */
+function richiestaAttiva(c) { return c.richiesta && c.richiesta.attiva; }
+function matchImmobili(c) {
+  if (!richiestaAttiva(c)) return [];
+  const r = c.richiesta;
+  return db.immobili.filter(i => {
+    if (i.stato !== 'disponibile' && i.stato !== 'trattativa') return false;
+    if (r.contratto && i.contratto !== r.contratto) return false;
+    if (r.tipo && i.tipo !== r.tipo) return false;
+    if (r.budget_max && Number(i.prezzo) > Number(r.budget_max)) return false;
+    if (r.locali_min && Number(i.locali || 0) < Number(r.locali_min)) return false;
+    if (r.mq_min && Number(i.mq || 0) < Number(r.mq_min)) return false;
+    if (r.zona) {
+      const z = r.zona.toLowerCase();
+      const hay = ((i.zona || '') + ' ' + (i.citta || '') + ' ' + (i.indirizzo || '')).toLowerCase();
+      if (!z.split(/[,;]+/).some(part => part.trim() && hay.includes(part.trim()))) return false;
+    }
+    return true;
+  });
+}
+function matchContatti(i) {
+  return db.contatti.filter(c => richiestaAttiva(c) && c.stato_lead !== 'perso' && matchImmobili(c).some(m => m.id === i.id));
+}
+
+/* ================= RENDER: HOME ================= */
+function renderHome() {
+  const oggi = todayStr();
+  const appOggi = db.appuntamenti.filter(a => a.data === oggi && a.stato === 'programmato');
+  const appRitardo = db.appuntamenti.filter(a => a.stato === 'programmato' && a.data < oggi);
+  const dispon = db.immobili.filter(i => i.stato === 'disponibile');
+  const leadNuovi = db.contatti.filter(c => c.stato_lead === 'nuovo');
+  const trattAperte = db.trattative.filter(t => FASI_TRATT[t.fase] && FASI_TRATT[t.fase].open);
+  const valore = dispon.reduce((s, i) => s + (Number(i.prezzo) || 0), 0);
+
+  let h = '<div class="grid-stats">' +
+    '<div class="stat c-ok" data-goto="immobili"><div class="num">' + dispon.length + '</div><div class="lbl">Immobili disponibili</div></div>' +
+    '<div class="stat c-danger" data-goto="contatti"><div class="num">' + leadNuovi.length + '</div><div class="lbl">Lead da lavorare</div></div>' +
+    '<div class="stat c-primary" data-goto="agenda"><div class="num">' + appOggi.length + '</div><div class="lbl">Appuntamenti oggi</div></div>' +
+    '<div class="stat c-warn" data-goto="trattative"><div class="num">' + trattAperte.length + '</div><div class="lbl">Trattative aperte</div></div>' +
+    '</div>';
+
+  h += '<div class="card"><h2>&#128188; Portafoglio in vendita/affitto</h2><div style="font-size:24px;font-weight:800;color:var(--primary)">' + fmtEur(valore) + '</div><div class="hint">Valore complessivo degli immobili disponibili</div></div>';
+
+  if (appRitardo.length) {
+    h += '<div class="card"><h2 style="color:var(--danger)">&#9888;&#65039; Appuntamenti in ritardo</h2>' + appRitardo.map(appCard).join('') + '</div>';
+  }
+  h += '<div class="card"><h2>&#128197; Oggi</h2>' + (appOggi.length ? appOggi.slice().sort((a, b) => (a.ora || '').localeCompare(b.ora || '')).map(appCard).join('') : '<div class="empty">Nessun appuntamento per oggi</div>') + '</div>';
+
+  const daLavorare = db.contatti.filter(c => c.stato_lead === 'nuovo' || c.stato_lead === 'contattato').slice(0, 5);
+  h += '<div class="card"><h2>&#128293; Lead da seguire</h2>' + (daLavorare.length ? daLavorare.map(conCard).join('') : '<div class="empty">Nessun lead in attesa</div>') + '</div>';
+
+  if (trattAperte.length) {
+    h += '<div class="card"><h2>&#129309; Trattative in corso</h2>' + trattAperte.slice(0, 5).map(traCard).join('') + '</div>';
+  }
+  return h;
+}
+
+/* ================= RENDER: IMMOBILI ================= */
+function immCard(i) {
+  const t = TIPI_IMM[i.tipo] || TIPI_IMM.altro;
+  const s = STATI_IMM[i.stato] || STATI_IMM.disponibile;
+  const foto = i.foto && i.foto.length ? '<img class="thumb" src="' + i.foto[0] + '" alt="">' : '<div class="thumb-ph">' + t.ico + '</div>';
+  const nMatch = (i.stato === 'disponibile' || i.stato === 'trattativa') ? matchContatti(i).length : 0;
+  return '<div class="item" data-imm="' + i.id + '">' + foto +
+    '<div class="body"><div class="t1">' + esc(i.titolo) + '</div>' +
+    '<div class="t2">' + esc(t.label) + ' · ' + esc(CONTRATTI[i.contratto] || '') + (immDesc(i) ? ' · ' + esc(immDesc(i)) : '') + '</div>' +
+    '<div class="t3">' + fmtEur(i.prezzo) + (i.contratto === 'affitto' ? '/mese' : '') + '</div></div>' +
+    '<div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end"><span class="badge ' + s.cls + '">' + s.label + '</span>' +
+    (nMatch ? '<span class="badge b-primary">' + nMatch + ' interessati</span>' : '') + '</div></div>';
+}
+function renderImmobili() {
+  let h = '<div class="filters">' +
+    '<input type="search" placeholder="Cerca per titolo, zona, indirizzo..." value="' + esc(fImm.q) + '" data-filter="imm-q">' +
+    '<div class="row3">' +
+    '<select data-filter="imm-stato"><option value="attivi"' + (fImm.stato === 'attivi' ? ' selected' : '') + '>Attivi</option><option value=""' + (fImm.stato === '' ? ' selected' : '') + '>Tutti</option>' + opts(STATI_IMM, fImm.stato) + '</select>' +
+    '<select data-filter="imm-contratto"><option value="">Vendita+Affitto</option>' + opts(CONTRATTI, fImm.contratto, false) + '</select>' +
+    '<select data-filter="imm-tipo"><option value="">Tutti i tipi</option>' + opts(TIPI_IMM, fImm.tipo) + '</select>' +
+    '</div></div>';
+  let list = db.immobili.slice();
+  if (fImm.stato === 'attivi') list = list.filter(i => i.stato === 'disponibile' || i.stato === 'trattativa');
+  else if (fImm.stato) list = list.filter(i => i.stato === fImm.stato);
+  if (fImm.contratto) list = list.filter(i => i.contratto === fImm.contratto);
+  if (fImm.tipo) list = list.filter(i => i.tipo === fImm.tipo);
+  if (fImm.q) {
+    const q = fImm.q.toLowerCase();
+    list = list.filter(i => (i.titolo + ' ' + (i.indirizzo || '') + ' ' + (i.zona || '') + ' ' + (i.citta || '') + ' ' + (i.rif || '')).toLowerCase().includes(q));
+  }
+  list.sort((a, b) => (b.creato || '').localeCompare(a.creato || ''));
+  h += list.length ? list.map(immCard).join('') : '<div class="empty">Nessun immobile. Premi + per inserire il primo.</div>';
+  return h;
+}
+
+/* ================= RENDER: CONTATTI ================= */
+function conCard(c) {
+  const t = TIPI_CONTATTO[c.tipo] || TIPI_CONTATTO.altro;
+  const l = STATI_LEAD[c.stato_lead] || STATI_LEAD.nuovo;
+  const nMatch = richiestaAttiva(c) ? matchImmobili(c).length : 0;
+  let sub = t.label;
+  if (richiestaAttiva(c)) {
+    const r = c.richiesta;
+    const bits = [];
+    if (r.tipo) bits.push(TIPI_IMM[r.tipo].label);
+    if (r.zona) bits.push(r.zona);
+    if (r.budget_max) bits.push('max ' + fmtEur(r.budget_max));
+    if (bits.length) sub += ' · cerca: ' + bits.join(', ');
+  }
+  return '<div class="item" data-con="' + c.id + '"><div class="bar" style="background:' + (c.stato_lead === 'nuovo' ? 'var(--danger)' : 'var(--primary)') + '"></div>' +
+    '<div class="body"><div class="t1">' + esc((c.cognome + ' ' + c.nome).trim()) + '</div>' +
+    '<div class="t2">' + esc(sub) + '</div>' +
+    (c.telefono ? '<div class="t2">&#128222; ' + esc(c.telefono) + '</div>' : '') + '</div>' +
+    '<div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end"><span class="badge ' + l.cls + '">' + l.label + '</span>' +
+    (nMatch ? '<span class="badge b-primary">' + nMatch + ' immobili adatti</span>' : '') + '</div></div>';
+}
+function renderContatti() {
+  let h = '<div class="filters">' +
+    '<input type="search" placeholder="Cerca per nome, telefono, email..." value="' + esc(fCon.q) + '" data-filter="con-q">' +
+    '<div class="row2">' +
+    '<select data-filter="con-tipo"><option value="">Tutti i tipi</option>' + opts(TIPI_CONTATTO, fCon.tipo) + '</select>' +
+    '<select data-filter="con-lead"><option value="">Tutti gli stati</option>' + opts(STATI_LEAD, fCon.lead) + '</select>' +
+    '</div></div>';
+  let list = db.contatti.slice();
+  if (fCon.tipo) list = list.filter(c => c.tipo === fCon.tipo);
+  if (fCon.lead) list = list.filter(c => c.stato_lead === fCon.lead);
+  if (fCon.q) {
+    const q = fCon.q.toLowerCase();
+    list = list.filter(c => (c.nome + ' ' + c.cognome + ' ' + (c.telefono || '') + ' ' + (c.email || '')).toLowerCase().includes(q));
+  }
+  const ord = { nuovo: 0, contattato: 1, appuntamento: 2, cliente: 3, perso: 4 };
+  list.sort((a, b) => (ord[a.stato_lead] ?? 9) - (ord[b.stato_lead] ?? 9) || (b.creato || '').localeCompare(a.creato || ''));
+  h += list.length ? list.map(conCard).join('') : '<div class="empty">Nessun contatto. Premi + per aggiungere il primo.</div>';
+  return h;
+}
+
+/* ================= RENDER: AGENDA ================= */
+function appCard(a) {
+  const t = TIPI_APP[a.tipo] || TIPI_APP.altro;
+  const s = STATI_APP[a.stato] || STATI_APP.programmato;
+  const late = a.stato === 'programmato' && a.data < todayStr();
+  const done = a.stato !== 'programmato';
+  const who = a.contatto_id ? contattoNome(a.contatto_id) : '';
+  const what = a.immobile_id ? immobileTitolo(a.immobile_id) : '';
+  return '<div class="item' + (done ? ' done' : '') + '" data-app="' + a.id + '"><div class="bar" style="background:' + t.color + '"></div>' +
+    '<div class="body"><div class="t1">' + esc(t.label) + (a.ora ? ' · ' + esc(a.ora) : '') + '</div>' +
+    '<div class="t2">' + fmtDate(a.data) + (who ? ' · ' + esc(who) : '') + '</div>' +
+    (what ? '<div class="t2">&#127976; ' + esc(what) + '</div>' : '') + '</div>' +
+    (late ? '<span class="badge b-danger">In ritardo</span>' : '<span class="badge ' + s.cls + '">' + s.label + '</span>') + '</div>';
+}
+function renderAgenda() {
+  let h = '<div class="filters"><div class="row2">' +
+    '<select data-filter="age-mostra">' +
+    '<option value="futuri"' + (fAge.mostra === 'futuri' ? ' selected' : '') + '>Da fare</option>' +
+    '<option value="tutti"' + (fAge.mostra === 'tutti' ? ' selected' : '') + '>Tutti</option>' +
+    '<option value="passati"' + (fAge.mostra === 'passati' ? ' selected' : '') + '>Storico</option>' +
+    '</select><div></div></div></div>';
+  let list = db.appuntamenti.slice();
+  if (fAge.mostra === 'futuri') list = list.filter(a => a.stato === 'programmato');
+  else if (fAge.mostra === 'passati') list = list.filter(a => a.stato !== 'programmato');
+  list.sort((a, b) => (a.data + (a.ora || '')).localeCompare(b.data + (b.ora || '')));
+  if (fAge.mostra === 'passati') list.reverse();
+  if (!list.length) return h + '<div class="empty">Nessun appuntamento qui.</div>';
+  const oggi = todayStr();
+  let lastKey = null;
+  list.forEach(a => {
+    const key = a.stato === 'programmato' && a.data < oggi ? 'late' : a.data;
+    if (key !== lastKey) {
+      lastKey = key;
+      if (key === 'late') h += '<div class="day-head late">In ritardo</div>';
+      else h += '<div class="day-head' + (a.data === oggi ? ' today' : '') + '">' + fmtDate(a.data) + '</div>';
+    }
+    h += appCard(a);
+  });
+  return h;
+}
+
+/* ================= RENDER: TRATTATIVE ================= */
+function traCard(t) {
+  const f = FASI_TRATT[t.fase] || FASI_TRATT.proposta;
+  const provv = t.importo && t.provvigione_pct ? Number(t.importo) * Number(t.provvigione_pct) / 100 : null;
+  return '<div class="item' + (f.open ? '' : ' done') + '" data-tra="' + t.id + '"><div class="bar" style="background:var(--warn)"></div>' +
+    '<div class="body"><div class="t1">' + esc(immobileTitolo(t.immobile_id)) + '</div>' +
+    '<div class="t2">' + esc(contattoNome(t.contatto_id)) + '</div>' +
+    '<div class="t3">' + fmtEur(t.importo) + (provv != null ? ' · provv. ' + fmtEur(provv) : '') + '</div></div>' +
+    '<span class="badge ' + f.cls + '">' + f.label + '</span></div>';
+}
+function renderTrattative() {
+  let h = '<div class="filters"><div class="row2">' +
+    '<select data-filter="tra-mostra">' +
+    '<option value="aperte"' + (fTra.mostra === 'aperte' ? ' selected' : '') + '>Aperte</option>' +
+    '<option value="tutte"' + (fTra.mostra === 'tutte' ? ' selected' : '') + '>Tutte</option>' +
+    '<option value="chiuse"' + (fTra.mostra === 'chiuse' ? ' selected' : '') + '>Chiuse</option>' +
+    '</select><div></div></div></div>';
+  let list = db.trattative.slice();
+  if (fTra.mostra === 'aperte') list = list.filter(t => FASI_TRATT[t.fase] && FASI_TRATT[t.fase].open);
+  else if (fTra.mostra === 'chiuse') list = list.filter(t => FASI_TRATT[t.fase] && !FASI_TRATT[t.fase].open);
+  if (!list.length) return h + '<div class="empty">Nessuna trattativa qui. Premi + per aprirne una.</div>';
+
+  const chiuseVinte = db.trattative.filter(t => t.fase === 'rogito');
+  const provvTot = chiuseVinte.reduce((s, t) => s + (t.importo && t.provvigione_pct ? Number(t.importo) * Number(t.provvigione_pct) / 100 : 0), 0);
+  const provvPot = list.filter(t => FASI_TRATT[t.fase].open).reduce((s, t) => s + (t.importo && t.provvigione_pct ? Number(t.importo) * Number(t.provvigione_pct) / 100 : 0), 0);
+  h += '<div class="card"><div class="kv" style="margin:0">' +
+    '<div class="k">Provvigioni potenziali</div><div style="font-weight:800;color:var(--warn)">' + fmtEur(provvPot) + '</div>' +
+    '<div class="k">Provvigioni incassate</div><div style="font-weight:800;color:var(--ok)">' + fmtEur(provvTot) + '</div></div></div>';
+
+  Object.keys(FASI_TRATT).forEach(fase => {
+    const items = list.filter(t => t.fase === fase);
+    if (!items.length) return;
+    h += '<div class="pipe-head"><span>' + FASI_TRATT[fase].label + '</span><span>' + items.length + '</span></div>';
+    h += items.sort((a, b) => (b.aggiornato || '').localeCompare(a.aggiornato || '')).map(traCard).join('');
+  });
+  return h;
+}
+
+/* ================= RENDER PRINCIPALE ================= */
+function render() {
+  const m = document.getElementById('main');
+  if (currentView === 'home') m.innerHTML = renderHome();
+  else if (currentView === 'immobili') m.innerHTML = renderImmobili();
+  else if (currentView === 'contatti') m.innerHTML = renderContatti();
+  else if (currentView === 'agenda') m.innerHTML = renderAgenda();
+  else if (currentView === 'trattative') m.innerHTML = renderTrattative();
+  document.querySelectorAll('#bottomnav button').forEach(b => b.classList.toggle('active', b.dataset.nav === currentView));
+}
+function nav(v) { currentView = v; render(); window.scrollTo(0, 0); }
+
+/* ================= MODALI ================= */
+function openModal(html) {
+  document.getElementById('modalBox').innerHTML = html;
+  document.getElementById('overlay').classList.add('open');
+}
+function closeModal() { document.getElementById('overlay').classList.remove('open'); pendingPhotos = []; }
+function mHead(t) { return '<h3>' + t + '<button class="x" data-action="close">&times;</button></h3>'; }
+
+/* ---- scelta rapida (FAB da home) ---- */
+function modalQuick() {
+  openModal(mHead('Nuovo') + '<div class="quick-grid">' +
+    '<button data-action="new-imm"><span class="ico">&#127976;</span>Immobile</button>' +
+    '<button data-action="new-con"><span class="ico">&#128100;</span>Contatto</button>' +
+    '<button data-action="new-app"><span class="ico">&#128197;</span>Appuntamento</button>' +
+    '<button data-action="new-tra"><span class="ico">&#129309;</span>Trattativa</button>' +
+    '</div>');
+}
+
+/* ---- form immobile ---- */
+function selContatti(sel, filtro) {
+  let cs = db.contatti.slice().sort((a, b) => (a.cognome + a.nome).localeCompare(b.cognome + b.nome));
+  if (filtro) cs = cs.filter(filtro);
+  return '<option value="">- nessuno -</option>' + cs.map(c => '<option value="' + c.id + '"' + (c.id === sel ? ' selected' : '') + '>' + esc((c.cognome + ' ' + c.nome).trim()) + '</option>').join('');
+}
+function selImmobili(sel) {
+  const list = db.immobili.slice().sort((a, b) => a.titolo.localeCompare(b.titolo));
+  return '<option value="">- nessuno -</option>' + list.map(i => '<option value="' + i.id + '"' + (i.id === sel ? ' selected' : '') + '>' + esc(i.titolo) + '</option>').join('');
+}
+function modalImmobile(id) {
+  const i = id ? immobile(id) : {};
+  pendingPhotos = (i.foto || []).slice();
+  openModal(mHead(id ? 'Modifica immobile' : 'Nuovo immobile') +
+    '<form id="fImm" data-id="' + (id || '') + '">' +
+    '<div class="frow full"><div><label>Titolo annuncio *</label><input name="titolo" required value="' + esc(i.titolo || '') + '" placeholder="es. Trilocale luminoso zona centro"></div></div>' +
+    '<div class="frow"><div><label>Tipologia</label><select name="tipo">' + opts(TIPI_IMM, i.tipo || 'appartamento') + '</select></div>' +
+    '<div><label>Contratto</label><select name="contratto">' + opts(CONTRATTI, i.contratto || 'vendita', false) + '</select></div></div>' +
+    '<div class="frow"><div><label>Prezzo richiesto (&euro;)</label><input name="prezzo" type="number" min="0" value="' + esc(i.prezzo || '') + '"></div>' +
+    '<div><label>Stato</label><select name="stato">' + opts(STATI_IMM, i.stato || 'disponibile') + '</select></div></div>' +
+    '<div class="frow"><div><label>Superficie (m&sup2;)</label><input name="mq" type="number" min="0" value="' + esc(i.mq || '') + '"></div>' +
+    '<div><label>Locali</label><input name="locali" type="number" min="0" value="' + esc(i.locali || '') + '"></div></div>' +
+    '<div class="frow"><div><label>Bagni</label><input name="bagni" type="number" min="0" value="' + esc(i.bagni || '') + '"></div>' +
+    '<div><label>Piano</label><input name="piano" value="' + esc(i.piano || '') + '"></div></div>' +
+    '<div class="frow full"><div><label>Indirizzo</label><input name="indirizzo" value="' + esc(i.indirizzo || '') + '"></div></div>' +
+    '<div class="frow"><div><label>Zona / quartiere</label><input name="zona" value="' + esc(i.zona || '') + '"></div>' +
+    '<div><label>Citt&agrave;</label><input name="citta" value="' + esc(i.citta || '') + '"></div></div>' +
+    '<div class="frow"><div><label>Classe energetica</label><select name="classe"><option value="">-</option>' + CLASSI_EN.map(c => '<option' + (c === i.classe ? ' selected' : '') + '>' + c + '</option>').join('') + '</select></div>' +
+    '<div><label>Riferimento interno</label><input name="rif" value="' + esc(i.rif || '') + '"></div></div>' +
+    '<div class="frow full"><div><label>Proprietario</label><select name="proprietario_id">' + selContatti(i.proprietario_id) + '</select></div></div>' +
+    '<div class="frow full"><div><label>Descrizione / note</label><textarea name="descrizione" rows="3">' + esc(i.descrizione || '') + '</textarea></div></div>' +
+    '<div><label>Foto</label><div class="photo-grid" id="photoGrid"></div>' +
+    '<input type="file" id="photoInput" accept="image/*" multiple style="margin-top:8px"></div>' +
+    '<div class="actions"><button type="button" class="btn btn-ghost" data-action="close">Annulla</button><button type="submit" class="btn btn-primary">Salva</button></div>' +
+    '</form>');
+  drawPhotoGrid();
+  document.getElementById('photoInput').addEventListener('change', onPhotoPick);
+}
+function drawPhotoGrid() {
+  const g = document.getElementById('photoGrid');
+  if (!g) return;
+  g.innerHTML = pendingPhotos.map((p, ix) => '<img src="' + p + '" data-delphoto="' + ix + '" title="Tocca per rimuovere">').join('') || '<div class="hint">Nessuna foto</div>';
+}
+function onPhotoPick(e) {
+  const files = Array.from(e.target.files || []);
+  files.forEach(f => {
+    const rd = new FileReader();
+    rd.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        const MAX = 900;
+        let w = img.width, h = img.height;
+        if (w > MAX || h > MAX) { const k = Math.min(MAX / w, MAX / h); w = Math.round(w * k); h = Math.round(h * k); }
+        const cv = document.createElement('canvas');
+        cv.width = w; cv.height = h;
+        cv.getContext('2d').drawImage(img, 0, 0, w, h);
+        pendingPhotos.push(cv.toDataURL('image/jpeg', 0.72));
+        drawPhotoGrid();
+      };
+      img.src = rd.result;
+    };
+    rd.readAsDataURL(f);
+  });
+  e.target.value = '';
+}
+function saveImmobile(form) {
+  const fd = new FormData(form);
+  const id = form.dataset.id;
+  const rec = id ? immobile(id) : { id: uid(), creato: new Date().toISOString() };
+  ['titolo', 'tipo', 'contratto', 'stato', 'piano', 'indirizzo', 'zona', 'citta', 'classe', 'rif', 'proprietario_id', 'descrizione'].forEach(k => rec[k] = (fd.get(k) || '').toString().trim());
+  ['prezzo', 'mq', 'locali', 'bagni'].forEach(k => { const v = fd.get(k); rec[k] = v === '' || v == null ? '' : Number(v); });
+  rec.foto = pendingPhotos.slice();
+  if (!id) db.immobili.push(rec);
+  save(); closeModal(); nav('immobili');
+  showToast(id ? 'Immobile aggiornato' : 'Immobile inserito');
+}
+function modalImmobileDetail(id) {
+  const i = immobile(id); if (!i) return;
+  const t = TIPI_IMM[i.tipo] || TIPI_IMM.altro;
+  const s = STATI_IMM[i.stato] || STATI_IMM.disponibile;
+  const interessati = matchContatti(i);
+  const tratt = db.trattative.filter(x => x.immobile_id === id);
+  let h = mHead(t.ico + ' ' + esc(i.titolo));
+  if (i.foto && i.foto.length) h += '<div class="photo-grid" style="margin-bottom:12px">' + i.foto.map(p => '<img src="' + p + '">').join('') + '</div>';
+  h += '<div class="kv">' +
+    '<div class="k">Stato</div><div><span class="badge ' + s.cls + '">' + s.label + '</span></div>' +
+    '<div class="k">Tipologia</div><div>' + esc(t.label) + ' · ' + esc(CONTRATTI[i.contratto] || '-') + '</div>' +
+    '<div class="k">Prezzo</div><div style="font-weight:800">' + fmtEur(i.prezzo) + (i.contratto === 'affitto' ? '/mese' : '') + '</div>' +
+    (i.mq ? '<div class="k">Superficie</div><div>' + i.mq + ' m&sup2;</div>' : '') +
+    (i.locali ? '<div class="k">Locali</div><div>' + i.locali + (i.bagni ? ' (+' + i.bagni + ' bagni)' : '') + '</div>' : '') +
+    (i.piano ? '<div class="k">Piano</div><div>' + esc(i.piano) + '</div>' : '') +
+    (i.indirizzo || i.zona || i.citta ? '<div class="k">Dove</div><div>' + esc([i.indirizzo, i.zona, i.citta].filter(Boolean).join(', ')) + '</div>' : '') +
+    (i.classe ? '<div class="k">Classe energetica</div><div>' + esc(i.classe) + '</div>' : '') +
+    (i.rif ? '<div class="k">Riferimento</div><div>' + esc(i.rif) + '</div>' : '') +
+    (i.proprietario_id ? '<div class="k">Proprietario</div><div>' + esc(contattoNome(i.proprietario_id)) + '</div>' : '') +
+    '</div>';
+  if (i.descrizione) h += '<div class="rich-box">' + esc(i.descrizione).replace(/\n/g, '<br>') + '</div>';
+  if (interessati.length) {
+    h += '<div class="match-box"><div class="mb-t">&#10024; ' + interessati.length + ' contatti con richiesta compatibile</div>' + interessati.map(conCard).join('') + '</div>';
+  }
+  if (tratt.length) h += '<div style="margin-top:12px"><label>Trattative su questo immobile</label>' + tratt.map(traCard).join('') + '</div>';
+  h += '<div class="actions">' +
+    '<button class="btn btn-danger btn-sm" data-action="del-imm" data-id="' + id + '">Elimina</button>' +
+    '<button class="btn btn-ghost btn-sm" data-action="new-app" data-imm="' + id + '">+ Appuntamento</button>' +
+    '<button class="btn btn-ghost btn-sm" data-action="new-tra" data-imm="' + id + '">+ Trattativa</button>' +
+    '<button class="btn btn-primary btn-sm" data-action="edit-imm" data-id="' + id + '">Modifica</button></div>';
+  openModal(h);
+}
+
+/* ---- form contatto ---- */
+function modalContatto(id) {
+  const c = id ? contatto(id) : {};
+  const r = c.richiesta || {};
+  openModal(mHead(id ? 'Modifica contatto' : 'Nuovo contatto') +
+    '<form id="fCon" data-id="' + (id || '') + '">' +
+    '<div class="frow"><div><label>Cognome *</label><input name="cognome" required value="' + esc(c.cognome || '') + '"></div>' +
+    '<div><label>Nome</label><input name="nome" value="' + esc(c.nome || '') + '"></div></div>' +
+    '<div class="frow"><div><label>Telefono</label><input name="telefono" type="tel" value="' + esc(c.telefono || '') + '"></div>' +
+    '<div><label>Email</label><input name="email" type="email" value="' + esc(c.email || '') + '"></div></div>' +
+    '<div class="frow"><div><label>Tipo</label><select name="tipo">' + opts(TIPI_CONTATTO, c.tipo || 'acquirente') + '</select></div>' +
+    '<div><label>Stato lead</label><select name="stato_lead">' + opts(STATI_LEAD, c.stato_lead || 'nuovo') + '</select></div></div>' +
+    '<div class="frow full"><div><label>Fonte</label><select name="fonte">' + opts(FONTI, c.fonte || 'portale', false) + '</select></div></div>' +
+    '<div class="frow full"><div><label>Note</label><textarea name="note" rows="2">' + esc(c.note || '') + '</textarea></div></div>' +
+    '<div class="card" style="box-shadow:none;border:1px solid var(--line);margin-bottom:0">' +
+    '<label style="display:flex;align-items:center;gap:8px;font-size:14px;color:var(--ink)"><input type="checkbox" name="r_attiva" style="width:auto"' + (r.attiva ? ' checked' : '') + '> Richiesta immobile attiva (per il matching)</label>' +
+    '<div class="frow" style="margin-top:10px"><div><label>Cerca in</label><select name="r_contratto"><option value="">Indifferente</option>' + opts(CONTRATTI, r.contratto, false) + '</select></div>' +
+    '<div><label>Tipologia</label><select name="r_tipo"><option value="">Indifferente</option>' + opts(TIPI_IMM, r.tipo) + '</select></div></div>' +
+    '<div class="frow"><div><label>Budget massimo (&euro;)</label><input name="r_budget" type="number" min="0" value="' + esc(r.budget_max || '') + '"></div>' +
+    '<div><label>Zona (anche pi&ugrave; zone, separate da virgola)</label><input name="r_zona" value="' + esc(r.zona || '') + '"></div></div>' +
+    '<div class="frow"><div><label>Locali minimi</label><input name="r_locali" type="number" min="0" value="' + esc(r.locali_min || '') + '"></div>' +
+    '<div><label>Mq minimi</label><input name="r_mq" type="number" min="0" value="' + esc(r.mq_min || '') + '"></div></div>' +
+    '</div>' +
+    '<div class="actions"><button type="button" class="btn btn-ghost" data-action="close">Annulla</button><button type="submit" class="btn btn-primary">Salva</button></div>' +
+    '</form>');
+}
+function saveContatto(form) {
+  const fd = new FormData(form);
+  const id = form.dataset.id;
+  const rec = id ? contatto(id) : { id: uid(), creato: new Date().toISOString() };
+  ['cognome', 'nome', 'telefono', 'email', 'tipo', 'stato_lead', 'fonte', 'note'].forEach(k => rec[k] = (fd.get(k) || '').toString().trim());
+  rec.richiesta = {
+    attiva: !!fd.get('r_attiva'),
+    contratto: (fd.get('r_contratto') || '').toString(),
+    tipo: (fd.get('r_tipo') || '').toString(),
+    budget_max: fd.get('r_budget') ? Number(fd.get('r_budget')) : '',
+    zona: (fd.get('r_zona') || '').toString().trim(),
+    locali_min: fd.get('r_locali') ? Number(fd.get('r_locali')) : '',
+    mq_min: fd.get('r_mq') ? Number(fd.get('r_mq')) : ''
+  };
+  if (!id) db.contatti.push(rec);
+  save(); closeModal(); nav('contatti');
+  showToast(id ? 'Contatto aggiornato' : 'Contatto aggiunto');
+}
+function modalContattoDetail(id) {
+  const c = contatto(id); if (!c) return;
+  const t = TIPI_CONTATTO[c.tipo] || TIPI_CONTATTO.altro;
+  const l = STATI_LEAD[c.stato_lead] || STATI_LEAD.nuovo;
+  const matches = matchImmobili(c);
+  const apps = db.appuntamenti.filter(a => a.contatto_id === id);
+  const tratt = db.trattative.filter(x => x.contatto_id === id);
+  const immSuoi = db.immobili.filter(i => i.proprietario_id === id);
+  let h = mHead('&#128100; ' + esc((c.cognome + ' ' + c.nome).trim()));
+  h += '<div class="kv">' +
+    '<div class="k">Stato lead</div><div><span class="badge ' + l.cls + '">' + l.label + '</span></div>' +
+    '<div class="k">Tipo</div><div>' + esc(t.label) + '</div>' +
+    (c.telefono ? '<div class="k">Telefono</div><div><a href="tel:' + esc(c.telefono) + '">' + esc(c.telefono) + '</a> · <a href="https://wa.me/' + esc(c.telefono.replace(/[^0-9]/g, '')) + '" target="_blank" rel="noopener">WhatsApp</a></div>' : '') +
+    (c.email ? '<div class="k">Email</div><div><a href="mailto:' + esc(c.email) + '">' + esc(c.email) + '</a></div>' : '') +
+    (c.fonte ? '<div class="k">Fonte</div><div>' + esc(FONTI[c.fonte] || c.fonte) + '</div>' : '') +
+    '</div>';
+  if (c.note) h += '<div class="rich-box">' + esc(c.note).replace(/\n/g, '<br>') + '</div>';
+  h += '<div class="chips">' + Object.keys(STATI_LEAD).map(k =>
+    '<button data-action="set-lead" data-id="' + id + '" data-val="' + k + '" class="' + (k === c.stato_lead ? 'on' : '') + '">' + STATI_LEAD[k].label + '</button>').join('') + '</div>';
+  if (richiestaAttiva(c)) {
+    const r = c.richiesta;
+    const bits = [];
+    if (r.contratto) bits.push(CONTRATTI[r.contratto]);
+    if (r.tipo) bits.push(TIPI_IMM[r.tipo].label);
+    if (r.zona) bits.push('zona ' + r.zona);
+    if (r.budget_max) bits.push('budget max ' + fmtEur(r.budget_max));
+    if (r.locali_min) bits.push('min ' + r.locali_min + ' locali');
+    if (r.mq_min) bits.push('min ' + r.mq_min + ' m²');
+    h += '<div class="rich-box" style="margin-top:10px"><b>Richiesta:</b> ' + esc(bits.join(', ') || 'senza criteri') + '</div>';
+    h += '<div class="match-box"><div class="mb-t">&#10024; ' + (matches.length ? matches.length + ' immobili compatibili' : 'Nessun immobile compatibile al momento') + '</div>' + matches.map(immCard).join('') + '</div>';
+  }
+  if (immSuoi.length) h += '<div style="margin-top:12px"><label>Immobili di sua propriet&agrave;</label>' + immSuoi.map(immCard).join('') + '</div>';
+  if (apps.length) h += '<div style="margin-top:12px"><label>Appuntamenti</label>' + apps.slice().sort((a, b) => b.data.localeCompare(a.data)).slice(0, 5).map(appCard).join('') + '</div>';
+  if (tratt.length) h += '<div style="margin-top:12px"><label>Trattative</label>' + tratt.map(traCard).join('') + '</div>';
+  h += '<div class="actions">' +
+    '<button class="btn btn-danger btn-sm" data-action="del-con" data-id="' + id + '">Elimina</button>' +
+    '<button class="btn btn-ghost btn-sm" data-action="new-app" data-con="' + id + '">+ Appuntamento</button>' +
+    '<button class="btn btn-ghost btn-sm" data-action="new-tra" data-con="' + id + '">+ Trattativa</button>' +
+    '<button class="btn btn-primary btn-sm" data-action="edit-con" data-id="' + id + '">Modifica</button></div>';
+  openModal(h);
+}
+
+/* ---- form appuntamento ---- */
+function modalAppuntamento(id, preImm, preCon) {
+  const a = id ? db.appuntamenti.find(x => x.id === id) : {};
+  openModal(mHead(id ? 'Modifica appuntamento' : 'Nuovo appuntamento') +
+    '<form id="fApp" data-id="' + (id || '') + '">' +
+    '<div class="frow"><div><label>Data *</label><input name="data" type="date" required value="' + esc(a.data || todayStr()) + '"></div>' +
+    '<div><label>Ora</label><input name="ora" type="time" value="' + esc(a.ora || '') + '"></div></div>' +
+    '<div class="frow full"><div><label>Tipo</label><select name="tipo">' + opts(TIPI_APP, a.tipo || 'visita') + '</select></div></div>' +
+    '<div class="frow full"><div><label>Contatto</label><select name="contatto_id">' + selContatti(a.contatto_id || preCon) + '</select></div></div>' +
+    '<div class="frow full"><div><label>Immobile</label><select name="immobile_id">' + selImmobili(a.immobile_id || preImm) + '</select></div></div>' +
+    '<div class="frow full"><div><label>Note</label><textarea name="note" rows="2">' + esc(a.note || '') + '</textarea></div></div>' +
+    '<div class="actions"><button type="button" class="btn btn-ghost" data-action="close">Annulla</button><button type="submit" class="btn btn-primary">Salva</button></div>' +
+    '</form>');
+}
+function saveAppuntamento(form) {
+  const fd = new FormData(form);
+  const id = form.dataset.id;
+  const rec = id ? db.appuntamenti.find(x => x.id === id) : { id: uid(), stato: 'programmato', creato: new Date().toISOString() };
+  ['data', 'ora', 'tipo', 'contatto_id', 'immobile_id', 'note'].forEach(k => rec[k] = (fd.get(k) || '').toString());
+  if (!id) db.appuntamenti.push(rec);
+  save(); closeModal(); nav('agenda');
+  showToast(id ? 'Appuntamento aggiornato' : 'Appuntamento creato');
+}
+function modalAppDetail(id) {
+  const a = db.appuntamenti.find(x => x.id === id); if (!a) return;
+  const t = TIPI_APP[a.tipo] || TIPI_APP.altro;
+  const s = STATI_APP[a.stato] || STATI_APP.programmato;
+  let h = mHead('&#128197; ' + esc(t.label));
+  h += '<div class="kv">' +
+    '<div class="k">Quando</div><div>' + fmtDate(a.data) + (a.ora ? ' alle ' + esc(a.ora) : '') + '</div>' +
+    '<div class="k">Stato</div><div><span class="badge ' + s.cls + '">' + s.label + '</span></div>' +
+    (a.contatto_id ? '<div class="k">Contatto</div><div>' + esc(contattoNome(a.contatto_id)) + '</div>' : '') +
+    (a.immobile_id ? '<div class="k">Immobile</div><div>' + esc(immobileTitolo(a.immobile_id)) + '</div>' : '') +
+    '</div>';
+  if (a.note) h += '<div class="rich-box">' + esc(a.note).replace(/\n/g, '<br>') + '</div>';
+  if (a.esito) h += '<div class="match-box"><div class="mb-t">Esito</div>' + esc(a.esito).replace(/\n/g, '<br>') + '</div>';
+  h += '<div class="actions">' +
+    '<button class="btn btn-danger btn-sm" data-action="del-app" data-id="' + id + '">Elimina</button>' +
+    (a.stato === 'programmato' ? '<button class="btn btn-ghost btn-sm" data-action="ann-app" data-id="' + id + '">Annulla app.</button>' +
+      '<button class="btn btn-ok btn-sm" data-action="done-app" data-id="' + id + '">Completa</button>' : '') +
+    '<button class="btn btn-primary btn-sm" data-action="edit-app" data-id="' + id + '">Modifica</button></div>';
+  openModal(h);
+}
+
+/* ---- form trattativa ---- */
+function modalTrattativa(id, preImm, preCon) {
+  const t = id ? db.trattative.find(x => x.id === id) : {};
+  openModal(mHead(id ? 'Modifica trattativa' : 'Nuova trattativa') +
+    '<form id="fTra" data-id="' + (id || '') + '">' +
+    '<div class="frow full"><div><label>Immobile *</label><select name="immobile_id" required>' + selImmobili(t.immobile_id || preImm) + '</select></div></div>' +
+    '<div class="frow full"><div><label>Cliente *</label><select name="contatto_id" required>' + selContatti(t.contatto_id || preCon) + '</select></div></div>' +
+    '<div class="frow"><div><label>Fase</label><select name="fase">' + opts(FASI_TRATT, t.fase || 'proposta') + '</select></div>' +
+    '<div><label>Importo offerto (&euro;)</label><input name="importo" type="number" min="0" value="' + esc(t.importo || '') + '"></div></div>' +
+    '<div class="frow"><div><label>Provvigione (%)</label><input name="provvigione_pct" type="number" min="0" step="0.1" value="' + esc(t.provvigione_pct != null && t.provvigione_pct !== '' ? t.provvigione_pct : 3) + '"></div><div></div></div>' +
+    '<div class="frow full"><div><label>Note</label><textarea name="note" rows="2">' + esc(t.note || '') + '</textarea></div></div>' +
+    '<div class="actions"><button type="button" class="btn btn-ghost" data-action="close">Annulla</button><button type="submit" class="btn btn-primary">Salva</button></div>' +
+    '</form>');
+}
+function syncImmobileConTrattativa(t) {
+  const i = immobile(t.immobile_id);
+  if (!i) return;
+  if (t.fase === 'rogito') {
+    i.stato = i.contratto === 'affitto' ? 'affittato' : 'venduto';
+    showToast('Immobile segnato come ' + STATI_IMM[i.stato].label.toLowerCase());
+  } else if (FASI_TRATT[t.fase] && FASI_TRATT[t.fase].open) {
+    if (i.stato === 'disponibile') i.stato = 'trattativa';
+  } else if (t.fase === 'persa') {
+    const altre = db.trattative.some(x => x.id !== t.id && x.immobile_id === i.id && FASI_TRATT[x.fase] && FASI_TRATT[x.fase].open);
+    if (!altre && i.stato === 'trattativa') { i.stato = 'disponibile'; showToast('Immobile di nuovo disponibile'); }
+  }
+}
+function saveTrattativa(form) {
+  const fd = new FormData(form);
+  const id = form.dataset.id;
+  if (!fd.get('immobile_id') || !fd.get('contatto_id')) { showToast('Seleziona immobile e cliente'); return; }
+  const rec = id ? db.trattative.find(x => x.id === id) : { id: uid(), creato: new Date().toISOString() };
+  ['immobile_id', 'contatto_id', 'fase', 'note'].forEach(k => rec[k] = (fd.get(k) || '').toString());
+  rec.importo = fd.get('importo') ? Number(fd.get('importo')) : '';
+  rec.provvigione_pct = fd.get('provvigione_pct') ? Number(fd.get('provvigione_pct')) : '';
+  rec.aggiornato = new Date().toISOString();
+  if (!id) db.trattative.push(rec);
+  syncImmobileConTrattativa(rec);
+  save(); closeModal(); nav('trattative');
+  showToast(id ? 'Trattativa aggiornata' : 'Trattativa aperta');
+}
+function modalTraDetail(id) {
+  const t = db.trattative.find(x => x.id === id); if (!t) return;
+  const f = FASI_TRATT[t.fase] || FASI_TRATT.proposta;
+  const provv = t.importo && t.provvigione_pct ? Number(t.importo) * Number(t.provvigione_pct) / 100 : null;
+  let h = mHead('&#129309; Trattativa');
+  h += '<div class="kv">' +
+    '<div class="k">Immobile</div><div>' + esc(immobileTitolo(t.immobile_id)) + '</div>' +
+    '<div class="k">Cliente</div><div>' + esc(contattoNome(t.contatto_id)) + '</div>' +
+    '<div class="k">Fase</div><div><span class="badge ' + f.cls + '">' + f.label + '</span></div>' +
+    '<div class="k">Importo</div><div style="font-weight:800">' + fmtEur(t.importo) + '</div>' +
+    (provv != null ? '<div class="k">Provvigione</div><div>' + fmtEur(provv) + ' (' + t.provvigione_pct + '%)</div>' : '') +
+    '</div>';
+  if (t.note) h += '<div class="rich-box">' + esc(t.note).replace(/\n/g, '<br>') + '</div>';
+  h += '<div class="chips">' + Object.keys(FASI_TRATT).map(k =>
+    '<button data-action="set-fase" data-id="' + id + '" data-val="' + k + '" class="' + (k === t.fase ? 'on' : '') + '">' + FASI_TRATT[k].label + '</button>').join('') + '</div>';
+  h += '<div class="actions">' +
+    '<button class="btn btn-danger btn-sm" data-action="del-tra" data-id="' + id + '">Elimina</button>' +
+    '<button class="btn btn-primary btn-sm" data-action="edit-tra" data-id="' + id + '">Modifica</button></div>';
+  openModal(h);
+}
+
+/* ---- impostazioni / export ---- */
+function modalSettings() {
+  const n = db.immobili.length + db.contatti.length + db.appuntamenti.length + db.trattative.length;
+  openModal(mHead('&#9881;&#65039; Impostazioni') +
+    '<div class="kv"><div class="k">Dati salvati</div><div>' + db.immobili.length + ' immobili, ' + db.contatti.length + ' contatti, ' + db.appuntamenti.length + ' appuntamenti, ' + db.trattative.length + ' trattative</div></div>' +
+    '<div class="hint" style="margin-bottom:12px">I dati sono salvati su questo dispositivo. Esporta regolarmente un backup.</div>' +
+    '<div class="actions" style="justify-content:flex-start">' +
+    '<button class="btn btn-ghost btn-sm" data-action="csv-imm">CSV immobili</button>' +
+    '<button class="btn btn-ghost btn-sm" data-action="csv-con">CSV contatti</button>' +
+    '<button class="btn btn-ghost btn-sm" data-action="csv-tra">CSV trattative</button></div>' +
+    '<div class="actions" style="justify-content:flex-start">' +
+    '<button class="btn btn-primary btn-sm" data-action="backup">Backup completo (JSON)</button>' +
+    '<label class="btn btn-ghost btn-sm" style="display:inline-block">Ripristina backup<input type="file" id="restoreInput" accept=".json" style="display:none"></label></div>' +
+    (n ? '<div class="actions" style="justify-content:flex-start"><button class="btn btn-danger btn-sm" data-action="wipe">Cancella tutti i dati</button></div>' : ''));
+  const ri = document.getElementById('restoreInput');
+  if (ri) ri.addEventListener('change', onRestore);
+}
+function dl(filename, content, type) {
+  const blob = new Blob([content], { type: type || 'text/plain;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+}
+function csvRow(arr) { return arr.map(v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"').join(';'); }
+function exportCsvImm() {
+  const rows = [csvRow(['Riferimento', 'Titolo', 'Tipologia', 'Contratto', 'Prezzo', 'Mq', 'Locali', 'Bagni', 'Piano', 'Indirizzo', 'Zona', 'Citta', 'Classe', 'Stato', 'Proprietario', 'Descrizione'])];
+  db.immobili.forEach(i => rows.push(csvRow([i.rif, i.titolo, (TIPI_IMM[i.tipo] || {}).label, CONTRATTI[i.contratto], i.prezzo, i.mq, i.locali, i.bagni, i.piano, i.indirizzo, i.zona, i.citta, i.classe, (STATI_IMM[i.stato] || {}).label, i.proprietario_id ? contattoNome(i.proprietario_id) : '', i.descrizione])));
+  dl('immobili.csv', '﻿' + rows.join('\r\n'), 'text/csv;charset=utf-8');
+}
+function exportCsvCon() {
+  const rows = [csvRow(['Cognome', 'Nome', 'Telefono', 'Email', 'Tipo', 'Stato lead', 'Fonte', 'Richiesta attiva', 'Cerca contratto', 'Cerca tipo', 'Budget max', 'Zona', 'Note'])];
+  db.contatti.forEach(c => {
+    const r = c.richiesta || {};
+    rows.push(csvRow([c.cognome, c.nome, c.telefono, c.email, (TIPI_CONTATTO[c.tipo] || {}).label, (STATI_LEAD[c.stato_lead] || {}).label, FONTI[c.fonte] || c.fonte, r.attiva ? 'Si' : 'No', CONTRATTI[r.contratto] || '', r.tipo ? TIPI_IMM[r.tipo].label : '', r.budget_max, r.zona, c.note]));
+  });
+  dl('contatti.csv', '﻿' + rows.join('\r\n'), 'text/csv;charset=utf-8');
+}
+function exportCsvTra() {
+  const rows = [csvRow(['Immobile', 'Cliente', 'Fase', 'Importo', 'Provvigione %', 'Provvigione EUR', 'Note', 'Aggiornata'])];
+  db.trattative.forEach(t => {
+    const provv = t.importo && t.provvigione_pct ? Number(t.importo) * Number(t.provvigione_pct) / 100 : '';
+    rows.push(csvRow([immobileTitolo(t.immobile_id), contattoNome(t.contatto_id), (FASI_TRATT[t.fase] || {}).label, t.importo, t.provvigione_pct, provv, t.note, t.aggiornato ? t.aggiornato.slice(0, 10) : '']));
+  });
+  dl('trattative.csv', '﻿' + rows.join('\r\n'), 'text/csv;charset=utf-8');
+}
+function onRestore(e) {
+  const f = e.target.files && e.target.files[0];
+  if (!f) return;
+  const rd = new FileReader();
+  rd.onload = () => {
+    try {
+      const data = JSON.parse(rd.result);
+      if (!data || !Array.isArray(data.immobili) || !Array.isArray(data.contatti)) throw new Error('formato');
+      if (!confirm('Sostituire i dati attuali con il backup (' + data.immobili.length + ' immobili, ' + data.contatti.length + ' contatti)?')) return;
+      db = { immobili: data.immobili || [], contatti: data.contatti || [], appuntamenti: data.appuntamenti || [], trattative: data.trattative || [] };
+      save(); closeModal(); render();
+      showToast('Backup ripristinato');
+    } catch (err) { showToast('File di backup non valido'); }
+  };
+  rd.readAsText(f);
+}
+
+/* ================= EVENTI ================= */
+document.addEventListener('click', e => {
+  const nv = e.target.closest('[data-nav]');
+  if (nv) { nav(nv.dataset.nav); return; }
+  const go = e.target.closest('[data-goto]');
+  if (go) { nav(go.dataset.goto); return; }
+  const dp = e.target.closest('[data-delphoto]');
+  if (dp) { pendingPhotos.splice(Number(dp.dataset.delphoto), 1); drawPhotoGrid(); return; }
+
+  const act = e.target.closest('[data-action]');
+  if (act) {
+    const a = act.dataset.action, id = act.dataset.id;
+    if (a === 'close') closeModal();
+    else if (a === 'settings') modalSettings();
+    else if (a === 'fab') {
+      if (currentView === 'immobili') modalImmobile();
+      else if (currentView === 'contatti') modalContatto();
+      else if (currentView === 'agenda') modalAppuntamento();
+      else if (currentView === 'trattative') modalTrattativa();
+      else modalQuick();
+    }
+    else if (a === 'new-imm') modalImmobile();
+    else if (a === 'new-con') modalContatto();
+    else if (a === 'new-app') modalAppuntamento(null, act.dataset.imm, act.dataset.con);
+    else if (a === 'new-tra') modalTrattativa(null, act.dataset.imm, act.dataset.con);
+    else if (a === 'edit-imm') modalImmobile(id);
+    else if (a === 'edit-con') modalContatto(id);
+    else if (a === 'edit-app') modalAppuntamento(id);
+    else if (a === 'edit-tra') modalTrattativa(id);
+    else if (a === 'del-imm') {
+      if (confirm('Eliminare questo immobile?')) { db.immobili = db.immobili.filter(x => x.id !== id); save(); closeModal(); render(); showToast('Immobile eliminato'); }
+    }
+    else if (a === 'del-con') {
+      if (confirm('Eliminare questo contatto?')) { db.contatti = db.contatti.filter(x => x.id !== id); save(); closeModal(); render(); showToast('Contatto eliminato'); }
+    }
+    else if (a === 'del-app') {
+      if (confirm('Eliminare questo appuntamento?')) { db.appuntamenti = db.appuntamenti.filter(x => x.id !== id); save(); closeModal(); render(); showToast('Appuntamento eliminato'); }
+    }
+    else if (a === 'del-tra') {
+      if (confirm('Eliminare questa trattativa?')) { db.trattative = db.trattative.filter(x => x.id !== id); save(); closeModal(); render(); showToast('Trattativa eliminata'); }
+    }
+    else if (a === 'done-app') {
+      const ap = db.appuntamenti.find(x => x.id === id);
+      if (ap) { const es = prompt('Esito appuntamento (facoltativo):', ap.esito || ''); ap.stato = 'completato'; if (es != null) ap.esito = es; save(); modalAppDetail(id); render(); showToast('Appuntamento completato'); }
+    }
+    else if (a === 'ann-app') {
+      const ap = db.appuntamenti.find(x => x.id === id);
+      if (ap) { ap.stato = 'annullato'; save(); modalAppDetail(id); render(); showToast('Appuntamento annullato'); }
+    }
+    else if (a === 'set-lead') {
+      const c = contatto(id);
+      if (c) { c.stato_lead = act.dataset.val; save(); modalContattoDetail(id); render(); }
+    }
+    else if (a === 'set-fase') {
+      const t = db.trattative.find(x => x.id === id);
+      if (t) { t.fase = act.dataset.val; t.aggiornato = new Date().toISOString(); syncImmobileConTrattativa(t); save(); modalTraDetail(id); render(); }
+    }
+    else if (a === 'csv-imm') exportCsvImm();
+    else if (a === 'csv-con') exportCsvCon();
+    else if (a === 'csv-tra') exportCsvTra();
+    else if (a === 'backup') dl('backup-immobiliare-' + todayStr() + '.json', JSON.stringify(db, null, 1), 'application/json');
+    else if (a === 'wipe') {
+      if (confirm('Cancellare TUTTI i dati? Operazione irreversibile.') && confirm('Sei davvero sicuro?')) {
+        db = { immobili: [], contatti: [], appuntamenti: [], trattative: [] };
+        save(); closeModal(); render(); showToast('Dati cancellati');
+      }
+    }
+    return;
+  }
+
+  const im = e.target.closest('[data-imm]');
+  if (im) { modalImmobileDetail(im.dataset.imm); return; }
+  const co = e.target.closest('[data-con]');
+  if (co) { modalContattoDetail(co.dataset.con); return; }
+  const ap = e.target.closest('[data-app]');
+  if (ap) { modalAppDetail(ap.dataset.app); return; }
+  const tr = e.target.closest('[data-tra]');
+  if (tr) { modalTraDetail(tr.dataset.tra); return; }
+
+  if (e.target.id === 'overlay') closeModal();
+});
+
+document.addEventListener('submit', e => {
+  e.preventDefault();
+  if (e.target.id === 'fImm') saveImmobile(e.target);
+  else if (e.target.id === 'fCon') saveContatto(e.target);
+  else if (e.target.id === 'fApp') saveAppuntamento(e.target);
+  else if (e.target.id === 'fTra') saveTrattativa(e.target);
+});
+
+document.addEventListener('input', e => {
+  const f = e.target.dataset.filter;
+  if (!f) return;
+  if (f === 'imm-q') { fImm.q = e.target.value; refreshList(); }
+  else if (f === 'con-q') { fCon.q = e.target.value; refreshList(); }
+});
+document.addEventListener('change', e => {
+  const f = e.target.dataset.filter;
+  if (!f) return;
+  if (f === 'imm-stato') fImm.stato = e.target.value;
+  else if (f === 'imm-contratto') fImm.contratto = e.target.value;
+  else if (f === 'imm-tipo') fImm.tipo = e.target.value;
+  else if (f === 'con-tipo') fCon.tipo = e.target.value;
+  else if (f === 'con-lead') fCon.lead = e.target.value;
+  else if (f === 'age-mostra') fAge.mostra = e.target.value;
+  else if (f === 'tra-mostra') fTra.mostra = e.target.value;
+  else return;
+  render();
+});
+/* mantiene il focus sulla ricerca mentre si digita */
+function refreshList() {
+  const focused = document.activeElement;
+  const fkey = focused && focused.dataset ? focused.dataset.filter : null;
+  const pos = fkey ? focused.selectionStart : 0;
+  render();
+  if (fkey) {
+    const el = document.querySelector('[data-filter="' + fkey + '"]');
+    if (el) { el.focus(); try { el.setSelectionRange(pos, pos); } catch (err) {} }
+  }
+}
+
+/* ================= AVVIO ================= */
+load();
+render();
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(() => {});
+</script>
+</body>
+</html>
