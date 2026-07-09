@@ -383,7 +383,7 @@ function openActForm(id) {
   if (!patients.length) { showToast('Prima inserisci un paziente in anagrafica'); return; }
   pendingPhotos = [];
   const ps = patients.slice().sort(function(x,y){ return (x.cognome + x.nome).localeCompare(y.cognome + y.nome); });
-  let h = modalHead(a ? 'Modifica attivitÃ ' : 'Nuova attivitÃ ');
+  let h = modalHead(a ? 'Modifica attività' : 'Nuova attività');
   h += '<form id="mform" data-form="act" data-id="' + (a ? a.id : '') + '">';
   h += '<div class="frow full"><div><label>Paziente *</label><select name="patient_id" required>' +
     ps.map(function(p){ return '<option value="' + p.id + '"' + (a && a.patient_id === p.id ? ' selected' : '') + '>' + esc(p.cognome + ' ' + p.nome) + '</option>'; }).join('') + '</select></div></div>';
@@ -397,7 +397,7 @@ function openActForm(id) {
   h += '<div class="frow"><div><label>Priorit&agrave;</label><select name="priorita"><option value="normale">Normale</option><option value="urgente"' + (a && a.priorita === 'urgente' ? ' selected' : '') + '>Urgente</option></select></div><div></div></div>';
   h += '<div class="frow full"><div><label>Note per il tecnico</label><textarea name="note" rows="3" placeholder="Indicazioni, prescrizione, materiale...">' + esc(a ? a.note : '') + '</textarea></div></div>';
   h += photoInputHtml();
-  h += '<div class="actions"><button type="button" class="btn btn-ghost" data-action="close-modal">Annulla</button><button type="submit" class="btn btn-primary">' + (a ? 'Salva modifiche' : 'Crea attivitÃ ') + '</button></div></form>';
+  h += '<div class="actions"><button type="button" class="btn btn-ghost" data-action="close-modal">Annulla</button><button type="submit" class="btn btn-primary">' + (a ? 'Salva modifiche' : 'Crea attività') + '</button></div></form>';
   openModal(h);
 }
 
@@ -424,7 +424,7 @@ async function submitAct(form) {
   }
   if (r.error) { showToast('Errore: ' + r.error.message); return; }
   closeModal(); await refresh();
-  showToast(isNew ? 'AttivitÃ  creata' : 'Modifiche salvate');
+  showToast(isNew ? 'Attività creata' : 'Modifiche salvate');
   if (isNew) sb.functions.invoke('notify', { body: { action: 'notify_new', activity_id: id } }).catch(function(){});
 }
 
@@ -474,7 +474,7 @@ async function submitComplete(form) {
   const r = await sb.from('vt_activities').update(upd).eq('id', id);
   if (r.error) { showToast('Errore: ' + r.error.message); return; }
   closeModal(); await refresh();
-  showToast('AttivitÃ  completata');
+  showToast('Attività completata');
   sb.functions.invoke('notify', { body: { action: 'notify_done', activity_id: id } }).catch(function(){});
 }
 
@@ -593,7 +593,7 @@ async function updateBellUI() {
 
 async function togglePush() {
   if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
-    showToast('Notifiche non supportate su questo browser. Su iPhone: aggiungi prima lâapp alla schermata Home.');
+    showToast('Notifiche non supportate su questo browser. Su iPhone: aggiungi prima l’app alla schermata Home.');
     return;
   }
   try {
@@ -611,7 +611,7 @@ async function togglePush() {
       const sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64ToBytes(vr.data.key) });
       const r = await sb.from('vt_push_subscriptions').upsert({ user_id: me.id, endpoint: sub.endpoint, subscription: sub.toJSON() }, { onConflict: 'endpoint' });
       if (r.error) { showToast('Errore salvataggio: ' + r.error.message); return; }
-      showToast('&#128276; Notifiche attivate su questo dispositivo');
+      showToast('Notifiche attivate su questo dispositivo');
     }
   } catch (e) { showToast('Errore notifiche: ' + (e.message || e)); }
   updateBellUI();
@@ -635,7 +635,7 @@ function subscribeRealtime() {
       refreshTimer = setTimeout(refresh, 400);
       if (payload.eventType === 'INSERT' && payload.new && payload.new.created_by !== me.name) {
         const t = TIPI[payload.new.tipo] || TIPI.altro;
-        showToast('&#10133; Nuova attivitÃ : ' + t.label + ' (' + fmtDate(payload.new.data) + ')');
+        showToast('Nuova attività: ' + t.label + ' (' + fmtDate(payload.new.data) + ')');
       }
     })
     .subscribe();
@@ -741,16 +741,16 @@ async function handleAction(action, id) {
     case 'edit-pat': openPatientForm(id); break;
     case 'incarico': await setStato(id, 'in_corso'); break;
     case 'riprogramma': await setStato(id, 'programmata'); break;
-    case 'annulla': if (confirm("Annullare questa attivitÃ ?")) await setStato(id, 'annullata'); break;
+    case 'annulla': if (confirm("Annullare questa attività?")) await setStato(id, 'annullata'); break;
     case 'delete-act':
-      if (confirm("Eliminare definitivamente questa attivitÃ ?")) {
+      if (confirm("Eliminare definitivamente questa attività?")) {
         const r = await sb.from('vt_activities').delete().eq('id', id);
         if (r.error) showToast('Errore: ' + r.error.message);
         closeModal(); await refresh();
       }
       break;
     case 'delete-pat':
-      if (confirm("Eliminare il paziente e tutte le sue attivitÃ ?")) {
+      if (confirm("Eliminare il paziente e tutte le sue attività?")) {
         const r = await sb.from('vt_patients').delete().eq('id', id);
         if (r.error) showToast('Errore: ' + r.error.message);
         closeModal(); await refresh();
