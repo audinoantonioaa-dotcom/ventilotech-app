@@ -137,10 +137,10 @@ const STATI = {
   annullata: { label: 'Annullata', cls: 'b-ann' }
 };
 const ESITO_FIELDS = {
-  saturimetria: [['spo2_media','SpO2 media (%)','number'],['spo2_min','SpO2 minima (%)','number'],['t90','T90 - tempo SpO2 sotto 90% (%)','number'],['odi','ODI (eventi/ora)','number']],
-  monitoraggio: [['ahi','AHI (eventi/ora)','number'],['odi','ODI (eventi/ora)','number'],['spo2_media','SpO2 media (%)','number'],['spo2_min','SpO2 minima (%)','number'],['t90','T90 (%)','number']],
-  titolazione: [['dispositivo','Dispositivo','text'],['modalita','Modalita (CPAP/APAP/BiLevel/NIV)','text'],['pressioni','Pressioni impostate','text'],['ahi_residuo','AHI residuo','number'],['perdite','Perdite (L/min)','number']],
-  controllo_ventilatore: [['dispositivo','Dispositivo','text'],['ore_utilizzo','Ore di utilizzo (contatore)','number'],['parametri','Parametri verificati / modifiche','text']]
+  saturimetria: [['matricola','Matricola apparecchiatura','text'],['spo2_media','SpO2 media (%)','number'],['spo2_min','SpO2 minima (%)','number'],['t90','T90 - tempo SpO2 sotto 90% (%)','number'],['odi','ODI (eventi/ora)','number']],
+  monitoraggio: [['matricola','Matricola apparecchiatura','text'],['ahi','AHI (eventi/ora)','number'],['odi','ODI (eventi/ora)','number'],['spo2_media','SpO2 media (%)','number'],['spo2_min','SpO2 minima (%)','number'],['t90','T90 (%)','number']],
+  titolazione: [['matricola','Matricola apparecchiatura','text'],['dispositivo','Dispositivo','text'],['modalita','Modalita (CPAP/APAP/BiLevel/NIV)','text'],['pressioni','Pressioni impostate','text'],['ahi_residuo','AHI residuo','number'],['perdite','Perdite (L/min)','number']],
+  controllo_ventilatore: [['matricola','Matricola apparecchiatura','text'],['dispositivo','Dispositivo','text'],['ore_utilizzo','Ore di utilizzo (contatore)','number'],['parametri','Parametri verificati / modifiche','text']]
 };
 const MESI = ['Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno','Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'];
 
@@ -188,11 +188,12 @@ function actCard(a) {
   const faseTxt = a.fase && a.fase !== 'unica' ? ' &middot; ' + FASI[a.fase] : '';
   const fasciaTxt = a.fascia && a.fascia !== 'qualsiasi' ? ' &middot; ' + FASCE[a.fascia] : '';
   const foto = a.photos && a.photos.length ? ' &middot; &#128247;' + a.photos.length : '';
+  const matr = a.esito && a.esito.matricola ? ' &middot; SN ' + esc(a.esito.matricola) : '';
   return '<div class="act' + (a.stato === 'completata' || a.stato === 'annullata' ? ' done' : '') + '" data-act="' + a.id + '">' +
     '<div class="tipo-bar" style="background:' + t.color + '"></div>' +
     '<div class="body">' +
       '<div class="t1">' + esc(t.label) + faseTxt + '</div>' +
-      '<div class="t2">&#128100; ' + esc(patientName(a.patient_id)) + ' &middot; &#128197; ' + fmtDate(a.data) + fasciaTxt + foto + '</div>' +
+      '<div class="t2">&#128100; ' + esc(patientName(a.patient_id)) + ' &middot; &#128197; ' + fmtDate(a.data) + fasciaTxt + foto + matr + '</div>' +
       (a.note ? '<div class="t2">&#128221; ' + esc(a.note) + '</div>' : '') +
     '</div>' +
     '<div style="text-align:right;display:flex;flex-direction:column;gap:4px;align-items:flex-end">' +
@@ -433,20 +434,23 @@ function openCompleteForm(id) {
   const a = activities.find(function(x){ return x.id === id; });
   if (!a) return;
   pendingPhotos = [];
-  const fields = ESITO_FIELDS[a.tipo] || [];
+  const allFields = ESITO_FIELDS[a.tipo] || [];
   const conDati = a.fase === 'ritiro' || a.fase === 'unica' || !a.fase;
+  // alla consegna si registra comunque la matricola dello strumento lasciato al paziente
+  const fields = conDati ? allFields : allFields.filter(function(f){ return f[0] === 'matricola'; });
   let h = modalHead('Completa: ' + (TIPI[a.tipo] || TIPI.altro).label);
   h += '<div class="hint" style="margin-bottom:12px">Paziente: <strong>' + esc(patientName(a.patient_id)) + '</strong> &middot; ' + FASI[a.fase || 'unica'] + '</div>';
   h += '<form id="mform" data-form="complete" data-id="' + a.id + '">';
-  if (fields.length && conDati) {
+  if (!conDati && allFields.length) {
+    h += '<div class="hint" style="margin-bottom:10px">Fase di consegna: registra la matricola dello strumento lasciato; i dati esame si inseriranno al ritiro.</div>';
+  }
+  if (fields.length) {
     h += '<div class="frow">';
     fields.forEach(function(f, i){
       h += '<div><label>' + f[1] + '</label><input type="' + f[2] + '" step="any" name="esito_' + f[0] + '" value="' + esc(a.esito && a.esito[f[0]] != null ? a.esito[f[0]] : '') + '"></div>';
       if (i % 2 === 1 && i < fields.length - 1) h += '</div><div class="frow">';
     });
     h += '</div>';
-  } else if (fields.length) {
-    h += '<div class="hint" style="margin-bottom:10px">Fase di consegna: i dati esame si inseriranno al ritiro.</div>';
   }
   h += '<div class="frow full"><div><label>Note esito / osservazioni</label><textarea name="esito_note" rows="3">' + esc(a.esito_note || '') + '</textarea></div></div>';
   h += photoInputHtml();
@@ -557,11 +561,12 @@ async function handlePhotoInput(input) {
 /* ---------- export CSV ---------- */
 function exportCSV() {
   const sep = ';';
-  const head = ['Data','Tipo','Fase','Paziente','Comune','Stato','Priorita','Creata da','Eseguita da','Completata il','Note','Esito','Note esito'];
+  const head = ['Data','Tipo','Fase','Paziente','Comune','Matricola','Stato','Priorita','Creata da','Eseguita da','Completata il','Note','Esito','Note esito'];
   const rows = activities.slice().sort(function(x,y){ return x.data.localeCompare(y.data); }).map(function(a){
     const p = patient(a.patient_id);
     const esitoTxt = a.esito ? Object.entries(a.esito).map(function(e){ return e[0] + '=' + e[1]; }).join(' | ') : '';
-    return [a.data, (TIPI[a.tipo]||TIPI.altro).label, FASI[a.fase||'unica'], patientName(a.patient_id), p ? (p.comune||'') : '', STATI[a.stato].label, a.priorita||'normale', a.created_by||'', a.eseguita_da||'', a.completed_at ? new Date(a.completed_at).toLocaleString('it-IT') : '', a.note||'', esitoTxt, a.esito_note||''].map(function(v){ return '"' + String(v).replace(/"/g, '""') + '"'; }).join(sep);
+    const matricola = a.esito && a.esito.matricola ? a.esito.matricola : '';
+    return [a.data, (TIPI[a.tipo]||TIPI.altro).label, FASI[a.fase||'unica'], patientName(a.patient_id), p ? (p.comune||'') : '', matricola, STATI[a.stato].label, a.priorita||'normale', a.created_by||'', a.eseguita_da||'', a.completed_at ? new Date(a.completed_at).toLocaleString('it-IT') : '', a.note||'', esitoTxt, a.esito_note||''].map(function(v){ return '"' + String(v).replace(/"/g, '""') + '"'; }).join(sep);
   });
   const blob = new Blob([String.fromCharCode(65279) + head.join(sep) + NL() + rows.join(NL())], { type: 'text/csv;charset=utf-8' });
   const link = document.createElement('a');
