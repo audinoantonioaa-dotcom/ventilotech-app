@@ -105,6 +105,7 @@ main{max-width:640px;margin:0 auto;padding:14px 14px 90px}
     <button data-action="nav-oggi"><span class="ico">&#127968;</span>Oggi</button>
     <button data-action="nav-agenda"><span class="ico">&#128197;</span>Agenda</button>
     <button data-action="nav-storico"><span class="ico">&#128203;</span>Storico</button>
+    <button data-action="nav-apparecchi"><span class="ico">&#129520;</span>Apparecchi</button>
     <button data-action="nav-pazienti"><span class="ico">&#128101;</span>Pazienti</button>
   </div>
 </div>
@@ -143,10 +144,16 @@ const ESITO_FIELDS = {
   controllo_ventilatore: [['matricola','Matricola apparecchiatura','text'],['dispositivo','Dispositivo','text'],['ore_utilizzo','Ore di utilizzo (contatore)','number'],['parametri','Parametri verificati / modifiche','text']]
 };
 const MESI = ['Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno','Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'];
+const STATO_DEV = {
+  sede: { label: 'In sede', cls: 'b-done' },
+  paziente: { label: 'Dal paziente', cls: 'b-prog' },
+  manutenzione: { label: 'In manutenzione', cls: 'b-corso' }
+};
 
 let me = null;
 let patients = [];
 let activities = [];
+let devices = [];
 let currentView = 'oggi';
 let filtri = { stato: 'attive', tipo: '', q: '' };
 let storicoQ = '';
@@ -288,8 +295,98 @@ function viewPazienti() {
   return h;
 }
 
+function viewApparecchi() {
+  let h = '';
+  if (canPlan()) h += '<button class="btn btn-primary" data-action="new-dev" style="width:100%;margin-bottom:12px">+ Nuovo apparecchio</button>';
+  h += '<div class="card">';
+  if (!devices.length) { h += '<div class="empty">Nessun apparecchio registrato. Le matricole inserite negli esiti compariranno qui automaticamente.</div></div>'; return h; }
+  devices.forEach(function(d){
+    const s = STATO_DEV[d.stato] || STATO_DEV.sede;
+    const pos = d.stato === 'paziente' && d.patient_id ? ' &middot; &#128100; ' + esc(patientName(d.patient_id)) : '';
+    h += '<div class="pat-card" data-dev="' + d.id + '">' +
+      '<div class="info"><div class="nome">SN ' + esc(d.matricola) + '</div>' +
+      '<div class="sub">' + esc(d.modello || 'modello non indicato') + pos + '</div></div>' +
+      '<span class="badge ' + s.cls + '">' + s.label + '</span></div>';
+  });
+  h += '</div>';
+  return h;
+}
+
+function deviceHistory(matricola) {
+  const sn = String(matricola).toLowerCase();
+  return activities.filter(function(a){
+    return a.esito && a.esito.matricola && String(a.esito.matricola).toLowerCase() === sn;
+  }).sort(function(x,y){ return y.data.localeCompare(x.data); });
+}
+
+function openDeviceDetail(id) {
+  const d = devices.find(function(x){ return x.id === id; });
+  if (!d) return;
+  const s = STATO_DEV[d.stato] || STATO_DEV.sede;
+  const storia = deviceHistory(d.matricola);
+  let h = modalHead('SN ' + d.matricola);
+  h += '<div class="kv">' +
+    '<div class="k">Modello</div><div>' + esc(d.modello || '-') + '</div>' +
+    '<div class="k">Stato</div><div><span class="badge ' + s.cls + '">' + s.label + '</span></div>' +
+    (d.stato === 'paziente' && d.patient_id ? '<div class="k">Presso</div><div>' + esc(patientName(d.patient_id)) + '</div>' : '') +
+    (d.note ? '<div class="k">Note</div><div>' + esc(d.note) + '</div>' : '') +
+  '</div>';
+  h += '<div style="font-weight:700;font-size:14px;margin:12px 0 8px">Storia interventi (' + storia.length + ')</div>';
+  h += storia.length ? storia.map(actCard).join('') : '<div class="empty">Nessun intervento registrato con questa matricola.</div>';
+  h += '<div class="actions">' +
+    (canPlan() ? '<button class="btn btn-ghost" data-action="edit-dev" data-id="' + d.id + '">&#9998; Modifica</button>' : '') +
+    '<button class="btn btn-ghost" data-action="close-modal">Chiudi</button></div>';
+  openModal(h);
+}
+
+function openDeviceForm(id) {
+  const d = id ? devices.find(function(x){ return x.id === id; }) : null;
+  const ps = patients.slice().sort(function(x,y){ return (x.cognome + x.nome).localeCompare(y.cognome + y.nome); });
+  let h = modalHead(d ? 'Modifica apparecchio' : 'Nuovo apparecchio');
+  h += '<form id="mform" data-form="device" data-id="' + (d ? d.id : '') + '">';
+  h += '<div class="frow"><div><label>Matricola *</label><input name="matricola" required autocapitalize="characters" value="' + esc(d ? d.matricola : '') + '"></div>' +
+    '<div><label>Modello</label><input name="modello" placeholder="es. AirSense 11" value="' + esc(d ? d.modello : '') + '"></div></div>';
+  h += '<div class="frow"><div><label>Stato</label><select name="stato">' +
+    Object.keys(STATO_DEV).map(function(k){ return '<option value="' + k + '"' + (d && d.stato === k ? ' selected' : '') + '>' + STATO_DEV[k].label + '</option>'; }).join('') +
+    '</select></div>' +
+    '<div><label>Presso paziente</label><select name="patient_id"><option value="">-</option>' +
+    ps.map(function(p){ return '<option value="' + p.id + '"' + (d && d.patient_id === p.id ? ' selected' : '') + '>' + esc(p.cognome + ' ' + p.nome) + '</option>'; }).join('') +
+    '</select></div></div>';
+  h += '<div class="frow full"><div><label>Note (manutenzioni, accessori...)</label><textarea name="note" rows="2">' + esc(d ? d.note : '') + '</textarea></div></div>';
+  h += '<div class="actions">' +
+    (d && canPlan() ? '<button type="button" class="btn btn-danger" data-action="delete-dev" data-id="' + d.id + '" style="margin-right:auto">&#128465;</button>' : '') +
+    '<button type="button" class="btn btn-ghost" data-action="close-modal">Annulla</button><button type="submit" class="btn btn-primary">Salva</button></div></form>';
+  openModal(h);
+}
+
+async function submitDevice(form) {
+  const id = form.dataset.id;
+  const data = {
+    matricola: form.matricola.value.trim(),
+    modello: form.modello.value.trim(),
+    note: form.note.value.trim(),
+    stato: form.stato.value,
+    patient_id: form.stato.value === 'paziente' && form.patient_id.value ? form.patient_id.value : null,
+    updated_at: new Date().toISOString()
+  };
+  const r = id ? await sb.from('vt_devices').update(data).eq('id', id) : await sb.from('vt_devices').insert(data);
+  if (r.error) { showToast('Errore: ' + r.error.message); return; }
+  closeModal(); await refresh();
+}
+
+/* sincronizza il registro apparecchi con la matricola registrata in un esito */
+async function syncDevice(matricola, fase, patientId) {
+  const sn = String(matricola || '').trim();
+  if (!sn) return;
+  const nuovoStato = fase === 'ritiro' ? 'sede' : 'paziente';
+  const pid = nuovoStato === 'paziente' ? patientId : null;
+  const dev = devices.find(function(d){ return d.matricola.toLowerCase() === sn.toLowerCase(); });
+  if (dev) await sb.from('vt_devices').update({ stato: nuovoStato, patient_id: pid, updated_at: new Date().toISOString() }).eq('id', dev.id);
+  else await sb.from('vt_devices').insert({ matricola: sn, stato: nuovoStato, patient_id: pid });
+}
+
 function render() {
-  const views = { oggi: viewOggi, agenda: viewAgenda, storico: viewStorico, pazienti: viewPazienti };
+  const views = { oggi: viewOggi, agenda: viewAgenda, storico: viewStorico, apparecchi: viewApparecchi, pazienti: viewPazienti };
   document.getElementById('main').innerHTML = views[currentView]();
   const navBtns = document.querySelectorAll('#bottomnav button');
   navBtns.forEach(function(b){ b.classList.toggle('active', b.dataset.action === 'nav-' + currentView); });
@@ -381,13 +478,20 @@ function renderPendingGrid() {
 
 function openActForm(id) {
   const a = id ? activities.find(function(x){ return x.id === id; }) : null;
-  if (!patients.length) { showToast('Prima inserisci un paziente in anagrafica'); return; }
   pendingPhotos = [];
   const ps = patients.slice().sort(function(x,y){ return (x.cognome + x.nome).localeCompare(y.cognome + y.nome); });
   let h = modalHead(a ? 'Modifica attività' : 'Nuova attività');
   h += '<form id="mform" data-form="act" data-id="' + (a ? a.id : '') + '">';
   h += '<div class="frow full"><div><label>Paziente *</label><select name="patient_id" required>' +
-    ps.map(function(p){ return '<option value="' + p.id + '"' + (a && a.patient_id === p.id ? ' selected' : '') + '>' + esc(p.cognome + ' ' + p.nome) + '</option>'; }).join('') + '</select></div></div>';
+    ps.map(function(p, i){ return '<option value="' + p.id + '"' + ((a && a.patient_id === p.id) || (!a && i === 0) ? ' selected' : '') + '>' + esc(p.cognome + ' ' + p.nome) + '</option>'; }).join('') +
+    '<option value="__new"' + (ps.length ? '' : ' selected') + '>&#10133; Nuovo paziente...</option>' +
+    '</select></div></div>';
+  h += '<div id="newPatFields" style="display:' + (ps.length ? 'none' : 'block') + '">' +
+    '<div class="frow"><div><label>Cognome nuovo paziente *</label><input name="np_cognome"></div><div><label>Nome *</label><input name="np_nome"></div></div>' +
+    '<div class="frow"><div><label>Telefono</label><input name="np_telefono"></div><div><label>Comune</label><input name="np_comune"></div></div>' +
+    '<div class="frow full"><div><label>Indirizzo</label><input name="np_indirizzo"></div></div>' +
+    '<div class="hint" style="margin-bottom:10px">Il paziente viene salvato in anagrafica insieme all&#39;attivit&agrave;; potrai completare gli altri dati da Pazienti.</div>' +
+  '</div>';
   h += '<div class="frow"><div><label>Tipo *</label><select name="tipo" required>' +
     Object.keys(TIPI).map(function(t){ return '<option value="' + t + '"' + (a && a.tipo === t ? ' selected' : '') + '>' + TIPI[t].label + '</option>'; }).join('') + '</select></div>' +
     '<div><label>Fase</label><select name="fase">' +
@@ -405,8 +509,22 @@ function openActForm(id) {
 async function submitAct(form) {
   const id = form.dataset.id || crypto.randomUUID();
   const isNew = !form.dataset.id;
+  let pid = form.patient_id.value;
+  if (pid === '__new') {
+    const cog = form.np_cognome.value.trim();
+    const nom = form.np_nome.value.trim();
+    if (!cog || !nom) { showToast('Inserisci cognome e nome del nuovo paziente'); return; }
+    const rp = await sb.from('vt_patients').insert({
+      cognome: cog, nome: nom,
+      telefono: form.np_telefono.value.trim(), comune: form.np_comune.value.trim(),
+      indirizzo: form.np_indirizzo.value.trim()
+    }).select().single();
+    if (rp.error) { showToast('Errore nuovo paziente: ' + rp.error.message); return; }
+    pid = rp.data.id;
+    patients.push(rp.data);
+  }
   const data = {
-    patient_id: form.patient_id.value, tipo: form.tipo.value, fase: form.fase.value,
+    patient_id: pid, tipo: form.tipo.value, fase: form.fase.value,
     data: form.data.value, fascia: form.fascia.value, priorita: form.priorita.value,
     note: form.note.value.trim()
   };
@@ -447,10 +565,12 @@ function openCompleteForm(id) {
   if (fields.length) {
     h += '<div class="frow">';
     fields.forEach(function(f, i){
-      h += '<div><label>' + f[1] + '</label><input type="' + f[2] + '" step="any" name="esito_' + f[0] + '" value="' + esc(a.esito && a.esito[f[0]] != null ? a.esito[f[0]] : '') + '"></div>';
+      const extra = f[0] === 'matricola' ? ' list="matricoleList" autocapitalize="characters"' : '';
+      h += '<div><label>' + f[1] + '</label><input type="' + f[2] + '" step="any" name="esito_' + f[0] + '"' + extra + ' value="' + esc(a.esito && a.esito[f[0]] != null ? a.esito[f[0]] : '') + '"></div>';
       if (i % 2 === 1 && i < fields.length - 1) h += '</div><div class="frow">';
     });
     h += '</div>';
+    h += '<datalist id="matricoleList">' + devices.map(function(d){ return '<option value="' + esc(d.matricola) + '">' + esc(d.modello || '') + '</option>'; }).join('') + '</datalist>';
   }
   h += '<div class="frow full"><div><label>Note esito / osservazioni</label><textarea name="esito_note" rows="3">' + esc(a.esito_note || '') + '</textarea></div></div>';
   h += photoInputHtml();
@@ -477,6 +597,7 @@ async function submitComplete(form) {
   };
   const r = await sb.from('vt_activities').update(upd).eq('id', id);
   if (r.error) { showToast('Errore: ' + r.error.message); return; }
+  if (esito.matricola) await syncDevice(esito.matricola, a.fase, a.patient_id);
   closeModal(); await refresh();
   showToast('Attività completata');
   sb.functions.invoke('notify', { body: { action: 'notify_done', activity_id: id } }).catch(function(){});
@@ -609,8 +730,12 @@ async function togglePush() {
       await existing.unsubscribe();
       showToast('Notifiche disattivate');
     } else {
+      if (Notification.permission === 'denied') {
+        showToast("Notifiche bloccate dal browser: tocca il lucchetto accanto all'indirizzo > Autorizzazioni > Notifiche > Consenti, poi riprova. Su iPhone: installa prima l'app sulla schermata Home.");
+        return;
+      }
       const perm = await Notification.requestPermission();
-      if (perm !== 'granted') { showToast('Permesso notifiche negato'); return; }
+      if (perm !== 'granted') { showToast("Permesso negato: consenti le notifiche dalle impostazioni del sito (lucchetto accanto all'indirizzo) e riprova."); return; }
       const vr = await sb.functions.invoke('notify', { body: { action: 'vapid_public_key' } });
       if (vr.error || !vr.data || !vr.data.key) { showToast('Errore configurazione notifiche'); return; }
       const sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64ToBytes(vr.data.key) });
@@ -626,10 +751,12 @@ async function togglePush() {
 async function refresh() {
   const rs = await Promise.all([
     sb.from('vt_patients').select('*').order('cognome'),
-    sb.from('vt_activities').select('*').order('data')
+    sb.from('vt_activities').select('*').order('data'),
+    sb.from('vt_devices').select('*').order('matricola')
   ]);
   if (rs[0].data) patients = rs[0].data;
   if (rs[1].data) activities = rs[1].data;
+  if (rs[2].data) devices = rs[2].data;
   render();
 }
 
@@ -696,6 +823,8 @@ document.body.addEventListener('click', function(ev){
   if (act) { openDetail(act.dataset.act); return; }
   const pat = ev.target.closest('[data-pat]');
   if (pat) { openPatientDetail(pat.dataset.pat); return; }
+  const dev = ev.target.closest('[data-dev]');
+  if (dev) { openDeviceDetail(dev.dataset.dev); return; }
   if (ev.target === document.getElementById('overlay')) closeModal();
 });
 
@@ -706,11 +835,17 @@ document.body.addEventListener('submit', function(ev){
   if (form.dataset.form === 'act') submitAct(form);
   else if (form.dataset.form === 'complete') submitComplete(form);
   else if (form.dataset.form === 'patient') submitPatient(form);
+  else if (form.dataset.form === 'device') submitDevice(form);
 });
 
 document.body.addEventListener('change', function(ev){
   const el = ev.target;
   if (el.dataset && el.dataset.file === 'act-photo') { handlePhotoInput(el); return; }
+  if (el.name === 'patient_id' && el.form && el.form.dataset.form === 'act') {
+    const np = document.getElementById('newPatFields');
+    if (np) np.style.display = el.value === '__new' ? 'block' : 'none';
+    return;
+  }
   if (el.dataset && el.dataset.filter) {
     if (el.dataset.filter === 'stato') { filtri.stato = el.value; render(); }
     else if (el.dataset.filter === 'tipo') { filtri.tipo = el.value; render(); }
@@ -746,6 +881,16 @@ async function handleAction(action, id) {
     case 'edit-act': openActForm(id); break;
     case 'new-pat': openPatientForm(); break;
     case 'edit-pat': openPatientForm(id); break;
+    case 'nav-apparecchi': currentView = 'apparecchi'; render(); break;
+    case 'new-dev': openDeviceForm(); break;
+    case 'edit-dev': openDeviceForm(id); break;
+    case 'delete-dev':
+      if (confirm("Eliminare questo apparecchio dal registro? Le attività restano.")) {
+        const rd = await sb.from('vt_devices').delete().eq('id', id);
+        if (rd.error) showToast('Errore: ' + rd.error.message);
+        closeModal(); await refresh();
+      }
+      break;
     case 'incarico': await setStato(id, 'in_corso'); break;
     case 'riprogramma': await setStato(id, 'programmata'); break;
     case 'annulla': if (confirm("Annullare questa attività?")) await setStato(id, 'annullata'); break;
