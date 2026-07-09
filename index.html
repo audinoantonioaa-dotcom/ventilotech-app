@@ -201,6 +201,7 @@ function actCard(a) {
     '<div class="body">' +
       '<div class="t1">' + esc(t.label) + faseTxt + '</div>' +
       '<div class="t2">&#128100; ' + esc(patientName(a.patient_id)) + ' &middot; &#128197; ' + fmtDate(a.data) + fasciaTxt + foto + matr + '</div>' +
+      (a.specialista ? '<div class="t2">&#129658; ' + esc(a.specialista) + '</div>' : '') +
       (a.note ? '<div class="t2">&#128221; ' + esc(a.note) + '</div>' : '') +
     '</div>' +
     '<div style="text-align:right;display:flex;flex-direction:column;gap:4px;align-items:flex-end">' +
@@ -234,7 +235,7 @@ function viewAgenda() {
   if (filtri.stato === 'attive') acts = acts.filter(function(a){ return a.stato === 'programmata' || a.stato === 'in_corso'; });
   else if (filtri.stato) acts = acts.filter(function(a){ return a.stato === filtri.stato; });
   if (filtri.tipo) acts = acts.filter(function(a){ return a.tipo === filtri.tipo; });
-  if (filtri.q) { const q = filtri.q.toLowerCase(); acts = acts.filter(function(a){ return patientName(a.patient_id).toLowerCase().indexOf(q) !== -1 || (a.note||'').toLowerCase().indexOf(q) !== -1; }); }
+  if (filtri.q) { const q = filtri.q.toLowerCase(); acts = acts.filter(function(a){ return patientName(a.patient_id).toLowerCase().indexOf(q) !== -1 || (a.note||'').toLowerCase().indexOf(q) !== -1 || (a.specialista||'').toLowerCase().indexOf(q) !== -1; }); }
   acts.sort(function(x,y){ return x.data.localeCompare(y.data) || (x.priorita === 'urgente' ? -1 : 1); });
   let h = '<div class="card"><div class="filters">' +
     '<div class="row2">' +
@@ -260,7 +261,7 @@ function viewAgenda() {
 
 function viewStorico() {
   let acts = activities.filter(function(a){ return a.stato === 'completata' || a.stato === 'annullata'; });
-  if (storicoQ) { const q = storicoQ.toLowerCase(); acts = acts.filter(function(a){ return patientName(a.patient_id).toLowerCase().indexOf(q) !== -1 || (TIPI[a.tipo]||TIPI.altro).label.toLowerCase().indexOf(q) !== -1; }); }
+  if (storicoQ) { const q = storicoQ.toLowerCase(); acts = acts.filter(function(a){ return patientName(a.patient_id).toLowerCase().indexOf(q) !== -1 || (TIPI[a.tipo]||TIPI.altro).label.toLowerCase().indexOf(q) !== -1 || (a.specialista||'').toLowerCase().indexOf(q) !== -1 || (a.esito && a.esito.matricola ? String(a.esito.matricola).toLowerCase().indexOf(q) !== -1 : false); }); }
   acts.sort(function(x,y){ return y.data.localeCompare(x.data); });
   let h = '<div class="card"><div class="filters">' +
     '<div><label>Cerca nello storico</label><input data-filter="storicoq" value="' + esc(storicoQ) + '" placeholder="Paziente o tipo esame..."></div></div>' +
@@ -412,6 +413,7 @@ async function openDetail(id) {
     '<div class="k">Fase</div><div>' + FASI[a.fase || 'unica'] + '</div>' +
     '<div class="k">Data prevista</div><div>' + fmtDate(a.data) + (a.fascia && a.fascia !== 'qualsiasi' ? ' &middot; ' + FASCE[a.fascia] : '') + '</div>' +
     '<div class="k">Priorit&agrave;</div><div>' + (a.priorita === 'urgente' ? '<span class="badge b-urg">URGENTE</span>' : 'Normale') + '</div>' +
+    (a.specialista ? '<div class="k">Richiesto da</div><div>' + esc(a.specialista) + '</div>' : '') +
     '<div class="k">Stato</div><div>' + statoBadge(a) + '</div>' +
     '<div class="k">Creata da</div><div>' + esc(a.created_by || '-') + ' &middot; ' + fmtDateTime(a.created_at) + '</div>' +
     (a.note ? '<div class="k">Note</div><div>' + esc(a.note) + '</div>' : '') +
@@ -499,7 +501,10 @@ function openActForm(id) {
   h += '<div class="frow"><div><label>Data prevista *</label><input type="date" name="data" required value="' + (a ? a.data : todayStr()) + '"></div>' +
     '<div><label>Fascia oraria</label><select name="fascia">' +
     Object.keys(FASCE).map(function(f){ return '<option value="' + f + '"' + (a && a.fascia === f ? ' selected' : '') + '>' + FASCE[f] + '</option>'; }).join('') + '</select></div></div>';
-  h += '<div class="frow"><div><label>Priorit&agrave;</label><select name="priorita"><option value="normale">Normale</option><option value="urgente"' + (a && a.priorita === 'urgente' ? ' selected' : '') + '>Urgente</option></select></div><div></div></div>';
+  const specialisti = Array.from(new Set(activities.map(function(x){ return (x.specialista || '').trim(); }).filter(Boolean))).sort();
+  h += '<div class="frow"><div><label>Priorit&agrave;</label><select name="priorita"><option value="normale">Normale</option><option value="urgente"' + (a && a.priorita === 'urgente' ? ' selected' : '') + '>Urgente</option></select></div>' +
+    '<div><label>Medico richiedente</label><input name="specialista" list="specialistiList" placeholder="es. dott. Ferrari" value="' + esc(a ? (a.specialista || '') : '') + '"></div></div>' +
+    '<datalist id="specialistiList">' + specialisti.map(function(s){ return '<option value="' + esc(s) + '">'; }).join('') + '</datalist>';
   h += '<div class="frow full"><div><label>Note per il tecnico</label><textarea name="note" rows="3" placeholder="Indicazioni, prescrizione, materiale...">' + esc(a ? a.note : '') + '</textarea></div></div>';
   h += photoInputHtml();
   h += '<div class="actions"><button type="button" class="btn btn-ghost" data-action="close-modal">Annulla</button><button type="submit" class="btn btn-primary">' + (a ? 'Salva modifiche' : 'Crea attività') + '</button></div></form>';
@@ -526,6 +531,7 @@ async function submitAct(form) {
   const data = {
     patient_id: pid, tipo: form.tipo.value, fase: form.fase.value,
     data: form.data.value, fascia: form.fascia.value, priorita: form.priorita.value,
+    specialista: form.specialista.value.trim(),
     note: form.note.value.trim()
   };
   let r;
@@ -682,12 +688,12 @@ async function handlePhotoInput(input) {
 /* ---------- export CSV ---------- */
 function exportCSV() {
   const sep = ';';
-  const head = ['Data','Tipo','Fase','Paziente','Comune','Matricola','Stato','Priorita','Creata da','Eseguita da','Completata il','Note','Esito','Note esito'];
+  const head = ['Data','Tipo','Fase','Paziente','Comune','Specialista','Matricola','Stato','Priorita','Creata da','Eseguita da','Completata il','Note','Esito','Note esito'];
   const rows = activities.slice().sort(function(x,y){ return x.data.localeCompare(y.data); }).map(function(a){
     const p = patient(a.patient_id);
     const esitoTxt = a.esito ? Object.entries(a.esito).map(function(e){ return e[0] + '=' + e[1]; }).join(' | ') : '';
     const matricola = a.esito && a.esito.matricola ? a.esito.matricola : '';
-    return [a.data, (TIPI[a.tipo]||TIPI.altro).label, FASI[a.fase||'unica'], patientName(a.patient_id), p ? (p.comune||'') : '', matricola, STATI[a.stato].label, a.priorita||'normale', a.created_by||'', a.eseguita_da||'', a.completed_at ? new Date(a.completed_at).toLocaleString('it-IT') : '', a.note||'', esitoTxt, a.esito_note||''].map(function(v){ return '"' + String(v).replace(/"/g, '""') + '"'; }).join(sep);
+    return [a.data, (TIPI[a.tipo]||TIPI.altro).label, FASI[a.fase||'unica'], patientName(a.patient_id), p ? (p.comune||'') : '', a.specialista||'', matricola, STATI[a.stato].label, a.priorita||'normale', a.created_by||'', a.eseguita_da||'', a.completed_at ? new Date(a.completed_at).toLocaleString('it-IT') : '', a.note||'', esitoTxt, a.esito_note||''].map(function(v){ return '"' + String(v).replace(/"/g, '""') + '"'; }).join(sep);
   });
   const blob = new Blob([String.fromCharCode(65279) + head.join(sep) + NL() + rows.join(NL())], { type: 'text/csv;charset=utf-8' });
   const link = document.createElement('a');
